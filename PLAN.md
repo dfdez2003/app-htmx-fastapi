@@ -78,7 +78,7 @@
 
 - [x] Hito 1 — Esqueleto del proyecto
 - [x] Hito 2 — Modelo de datos
-- [ ] Hito 3 — Tablero server-rendered
+- [x] Hito 3 — Tablero server-rendered
 - [ ] Hito 4 — Crear tarea
 - [ ] Hito 5 — Editar inline y eliminar
 - [ ] Hito 6 — Mover entre columnas y reordenar
