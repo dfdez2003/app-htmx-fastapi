@@ -69,6 +69,7 @@ app-htmx-fastapi/
 GET    /                        -> tablero completo (server-rendered)
 GET    /tareas?buscar=&etiqueta= -> columnas filtradas (fragmento, para búsqueda en vivo)
 POST   /tareas                  -> crea tarea, devuelve la tarjeta insertada + oob del contador de su columna
+GET    /tareas/{id}             -> tarjeta individual (vista); usado por "Cancelar" al salir de edición sin guardar
 GET    /tareas/{id}/editar      -> formulario inline (reemplaza la tarjeta)
 PUT    /tareas/{id}             -> guarda edición, devuelve la tarjeta actualizada
 DELETE /tareas/{id}             -> elimina, respuesta vacía (el nodo desaparece vía hx-swap) + oob del contador

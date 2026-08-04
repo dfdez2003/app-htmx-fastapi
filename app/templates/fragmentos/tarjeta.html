@@ -5,4 +5,12 @@
     {% if tarea.etiqueta %}<span class="etiqueta">{{ tarea.etiqueta }}</span>{% endif %}
     {% if tarea.fecha_limite %}<span class="fecha">{{ tarea.fecha_limite }}</span>{% endif %}
   </div>
+  <div class="tarjeta-acciones">
+    <button type="button" class="boton-icono"
+            hx-get="/tareas/{{ tarea.id }}/editar" hx-target="#tarea-{{ tarea.id }}" hx-swap="outerHTML"
+            title="Editar">✎</button>
+    <button type="button" class="boton-icono"
+            hx-delete="/tareas/{{ tarea.id }}" hx-target="#tarea-{{ tarea.id }}" hx-swap="outerHTML"
+            hx-confirm="¿Eliminar esta tarea?" title="Eliminar">🗑</button>
+  </div>
 </article>

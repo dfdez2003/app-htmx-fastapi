@@ -104,6 +104,29 @@ body {
   border-color: #e0554f;
 }
 
+.tarjeta-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+}
+
+.boton-icono {
+  border: none;
+  background: transparent;
+  color: var(--texto-suave);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  line-height: 1;
+}
+
+.boton-icono:hover {
+  background: var(--fondo);
+  color: var(--texto);
+}
+
 .formulario-tarea {
   display: flex;
   flex-direction: column;
@@ -111,13 +134,38 @@ body {
   margin-top: 0.6rem;
 }
 
-.formulario-tarea input {
+.formulario-tarea.formulario-editar {
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  margin-top: 0;
+}
+
+.formulario-tarea input,
+.formulario-tarea textarea {
   font: inherit;
   padding: 0.4rem 0.5rem;
   border: 1px solid var(--borde);
   border-radius: 6px;
   background: var(--fondo);
   color: var(--texto);
+  resize: vertical;
+}
+
+.formulario-fila {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.formulario-fila input {
+  flex: 1;
+  min-width: 0;
+}
+
+.formulario-acciones {
+  display: flex;
+  gap: 0.4rem;
 }
 
 .formulario-tarea button {
@@ -132,4 +180,10 @@ body {
 
 .formulario-tarea button:hover {
   opacity: 0.9;
+}
+
+.formulario-tarea button.boton-secundario {
+  background: transparent;
+  border-color: var(--borde);
+  color: var(--texto-suave);
 }
