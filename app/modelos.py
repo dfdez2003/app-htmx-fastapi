@@ -1,0 +1,21 @@
+from datetime import date, datetime
+from enum import Enum
+
+from sqlmodel import Field, SQLModel
+
+
+class Columna(str, Enum):
+    por_hacer = "por_hacer"
+    en_progreso = "en_progreso"
+    hecho = "hecho"
+
+
+class Tarea(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    titulo: str
+    descripcion: str = ""
+    columna: Columna = Columna.por_hacer
+    orden: int = 0
+    etiqueta: str | None = None
+    fecha_limite: date | None = None
+    creado_en: datetime = Field(default_factory=datetime.utcnow)
