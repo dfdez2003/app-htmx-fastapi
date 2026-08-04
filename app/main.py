@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.database import crear_tablas, sembrar_datos
 from app.rutas.tablero import router as tablero_router
+from app.rutas.tareas import router as tareas_router
 
 
 @asynccontextmanager
@@ -22,6 +23,7 @@ app.mount(
     name="static",
 )
 app.include_router(tablero_router)
+app.include_router(tareas_router)
 
 
 @app.get("/salud")

@@ -103,3 +103,33 @@ body {
 .tarjeta.vencida {
   border-color: #e0554f;
 }
+
+.formulario-tarea {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.formulario-tarea input {
+  font: inherit;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  background: var(--fondo);
+  color: var(--texto);
+}
+
+.formulario-tarea button {
+  font: inherit;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--acento);
+  border-radius: 6px;
+  background: var(--acento);
+  color: #fff;
+  cursor: pointer;
+}
+
+.formulario-tarea button:hover {
+  opacity: 0.9;
+}
