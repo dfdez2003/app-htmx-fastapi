@@ -1,0 +1,105 @@
+:root {
+  --fondo: #f4f5f7;
+  --panel: #ffffff;
+  --borde: #dcdfe4;
+  --texto: #1f2328;
+  --texto-suave: #59636e;
+  --acento: #2f6feb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--fondo);
+  color: var(--texto);
+}
+
+.cabecera {
+  padding: 1.5rem 2rem 1rem;
+}
+
+.cabecera h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.tablero {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
+  gap: 1rem;
+  padding: 0 2rem 2rem;
+  align-items: start;
+}
+
+.columna {
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: 0.75rem;
+  min-height: 120px;
+}
+
+.columna h2 {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  display: flex;
+  justify-content: space-between;
+  color: var(--texto-suave);
+}
+
+.contador {
+  background: var(--fondo);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 40px;
+}
+
+.tarjeta {
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+}
+
+.tarjeta h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+}
+
+.tarjeta p {
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+  color: var(--texto-suave);
+}
+
+.meta {
+  display: flex;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+}
+
+.etiqueta {
+  background: #eef2ff;
+  color: var(--acento);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+}
+
+.fecha {
+  color: var(--texto-suave);
+}
+
+.tarjeta.vencida {
+  border-color: #e0554f;
+}

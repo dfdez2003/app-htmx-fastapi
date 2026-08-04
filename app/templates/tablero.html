@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block contenido %}
+<header class="cabecera">
+  <h1>Tablero</h1>
+</header>
+<main id="tablero-columnas" class="tablero">
+  {% for columna in columnas %}
+  <section class="columna" id="columna-{{ columna.clave }}" data-columna="{{ columna.clave }}">
+    <h2>{{ columna.etiqueta }} <span class="contador">{{ columna.tareas|length }}</span></h2>
+    <div class="lista">
+      {% for tarea in columna.tareas %}
+        {% include "fragmentos/tarjeta.html" %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+</main>
+{% endblock %}

@@ -1,8 +1,11 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from app.database import crear_tablas, sembrar_datos
+from app.rutas.tablero import router as tablero_router
 
 
 @asynccontextmanager
@@ -13,6 +16,12 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Tablero kanban", lifespan=lifespan)
+app.mount(
+    "/static",
+    StaticFiles(directory=str(Path(__file__).parent / "static")),
+    name="static",
+)
+app.include_router(tablero_router)
 
 
 @app.get("/salud")

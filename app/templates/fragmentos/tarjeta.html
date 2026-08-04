@@ -1,0 +1,8 @@
+<article class="tarjeta" id="tarea-{{ tarea.id }}" data-id="{{ tarea.id }}">
+  <h3>{{ tarea.titulo }}</h3>
+  {% if tarea.descripcion %}<p>{{ tarea.descripcion }}</p>{% endif %}
+  <div class="meta">
+    {% if tarea.etiqueta %}<span class="etiqueta">{{ tarea.etiqueta }}</span>{% endif %}
+    {% if tarea.fecha_limite %}<span class="fecha">{{ tarea.fecha_limite }}</span>{% endif %}
+  </div>
+</article>
