@@ -80,7 +80,7 @@
 - [x] Hito 2 — Modelo de datos
 - [x] Hito 3 — Tablero server-rendered
 - [x] Hito 4 — Crear tarea
-- [ ] Hito 5 — Editar inline y eliminar
+- [x] Hito 5 — Editar inline y eliminar
 - [ ] Hito 6 — Mover entre columnas y reordenar
 - [ ] Hito 7 — Contadores y vencidas
 - [ ] Hito 8 — Búsqueda en vivo
