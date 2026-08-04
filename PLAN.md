@@ -77,7 +77,7 @@
 ## Estado
 
 - [x] Hito 1 — Esqueleto del proyecto
-- [ ] Hito 2 — Modelo de datos
+- [x] Hito 2 — Modelo de datos
 - [ ] Hito 3 — Tablero server-rendered
 - [ ] Hito 4 — Crear tarea
 - [ ] Hito 5 — Editar inline y eliminar
