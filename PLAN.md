@@ -81,7 +81,7 @@
 - [x] Hito 3 — Tablero server-rendered
 - [x] Hito 4 — Crear tarea
 - [x] Hito 5 — Editar inline y eliminar
-- [ ] Hito 6 — Mover entre columnas y reordenar
+- [x] Hito 6 — Mover entre columnas y reordenar
 - [ ] Hito 7 — Contadores y vencidas
 - [ ] Hito 8 — Búsqueda en vivo
 - [ ] Hito 9 — Tests
