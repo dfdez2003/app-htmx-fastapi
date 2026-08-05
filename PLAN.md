@@ -84,5 +84,5 @@
 - [x] Hito 6 — Mover entre columnas y reordenar
 - [x] Hito 7 — Contadores y vencidas
 - [x] Hito 8 — Búsqueda en vivo
-- [ ] Hito 9 — Tests
+- [x] Hito 9 — Tests
 - [ ] Hito 10 — Cierre
