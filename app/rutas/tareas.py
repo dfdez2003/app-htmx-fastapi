@@ -105,3 +105,57 @@ def eliminar_tarea(tarea_id: int, session: Session = Depends(get_session)):
     session.delete(tarea)
     session.commit()
     return Response(status_code=200)
+
+
+@router.put("/tareas/{tarea_id}/mover")
+def mover_tarea(
+    request: Request,
+    tarea_id: int,
+    columna_destino: Columna = Form(...),
+    posicion: int = Form(...),
+    session: Session = Depends(get_session),
+):
+    tarea = _obtener_o_404(session, tarea_id)
+    columna_origen = tarea.columna
+
+    # Recalcular la columna destino insertando la tarea en la posición pedida
+    # (se excluye a sí misma de la consulta: si es un reordenamiento dentro
+    # de la misma columna, esto es lo que permite "sacarla y reinsertarla").
+    tareas_destino = session.exec(
+        select(Tarea)
+        .where(Tarea.columna == columna_destino, Tarea.id != tarea_id)
+        .order_by(Tarea.orden)
+    ).all()
+    posicion = max(0, min(posicion, len(tareas_destino)))
+    tareas_destino.insert(posicion, tarea)
+
+    tarea.columna = columna_destino
+    for indice, t in enumerate(tareas_destino):
+        t.orden = indice
+        session.add(t)
+
+    # Si cambió de columna, recompactar también el orden de la columna origen
+    if columna_origen != columna_destino:
+        tareas_origen = session.exec(
+            select(Tarea).where(Tarea.columna == columna_origen).order_by(Tarea.orden)
+        ).all()
+        for indice, t in enumerate(tareas_origen):
+            t.orden = indice
+            session.add(t)
+
+    session.commit()
+
+    tareas_destino_final = session.exec(
+        select(Tarea).where(Tarea.columna == columna_destino).order_by(Tarea.orden)
+    ).all()
+    bloques = [{"columna_clave": columna_destino.value, "tareas": tareas_destino_final}]
+
+    if columna_origen != columna_destino:
+        tareas_origen_final = session.exec(
+            select(Tarea).where(Tarea.columna == columna_origen).order_by(Tarea.orden)
+        ).all()
+        bloques.append({"columna_clave": columna_origen.value, "tareas": tareas_origen_final})
+
+    return templates.TemplateResponse(
+        request, "fragmentos/lista_columna.html", {"bloques": bloques}
+    )

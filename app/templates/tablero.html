@@ -7,7 +7,7 @@
   {% for columna in columnas %}
   <section class="columna" id="columna-{{ columna.clave }}" data-columna="{{ columna.clave }}">
     <h2>{{ columna.etiqueta }} <span class="contador">{{ columna.tareas|length }}</span></h2>
-    <div class="lista">
+    <div class="lista" id="lista-{{ columna.clave }}" data-columna="{{ columna.clave }}">
       {% for tarea in columna.tareas %}
         {% include "fragmentos/tarjeta.html" %}
       {% endfor %}
@@ -18,4 +18,5 @@
   </section>
   {% endfor %}
 </main>
+<script src="/static/tablero.js"></script>
 {% endblock %}

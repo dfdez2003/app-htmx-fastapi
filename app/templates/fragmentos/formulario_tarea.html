@@ -18,7 +18,7 @@
 {% else %}
 <form class="formulario-tarea formulario-crear"
       hx-post="/tareas"
-      hx-target="#columna-{{ columna_clave }} .lista"
+      hx-target="#lista-{{ columna_clave }}"
       hx-swap="beforeend"
       hx-on::after-request="if(event.detail.successful) this.reset()">
   <input type="hidden" name="columna" value="{{ columna_clave }}">
