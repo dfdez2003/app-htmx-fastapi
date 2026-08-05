@@ -27,6 +27,24 @@ body {
   font-size: 1.4rem;
 }
 
+.buscador {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  max-width: 500px;
+}
+
+.buscador input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--texto);
+}
+
 .tablero {
   display: grid;
   grid-template-columns: repeat(3, minmax(260px, 1fr));

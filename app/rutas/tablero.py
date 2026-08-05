@@ -2,16 +2,10 @@ from fastapi import APIRouter, Depends, Request
 from sqlmodel import Session, select
 
 from app.database import get_session
-from app.modelos import Columna, Tarea
+from app.modelos import ETIQUETAS_COLUMNA, Columna, Tarea
 from app.plantillas import templates
 
 router = APIRouter()
-
-ETIQUETAS_COLUMNA = {
-    Columna.por_hacer: "Por hacer",
-    Columna.en_progreso: "En progreso",
-    Columna.hecho: "Hecho",
-}
 
 
 @router.get("/")

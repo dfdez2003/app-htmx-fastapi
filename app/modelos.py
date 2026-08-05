@@ -10,6 +10,13 @@ class Columna(str, Enum):
     hecho = "hecho"
 
 
+ETIQUETAS_COLUMNA = {
+    Columna.por_hacer: "Por hacer",
+    Columna.en_progreso: "En progreso",
+    Columna.hecho: "Hecho",
+}
+
+
 class Tarea(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     titulo: str

@@ -2,21 +2,17 @@
 {% block contenido %}
 <header class="cabecera">
   <h1>Tablero</h1>
+  <div class="buscador">
+    <input type="search" name="buscar" id="buscador-texto" placeholder="Buscar por título..."
+           hx-get="/tareas" hx-target="#tablero-columnas" hx-swap="innerHTML"
+           hx-trigger="keyup changed delay:300ms" hx-include="#buscador-etiqueta">
+    <input type="text" name="etiqueta" id="buscador-etiqueta" placeholder="Filtrar por etiqueta..."
+           hx-get="/tareas" hx-target="#tablero-columnas" hx-swap="innerHTML"
+           hx-trigger="keyup changed delay:300ms" hx-include="#buscador-texto">
+  </div>
 </header>
 <main id="tablero-columnas" class="tablero">
-  {% for columna in columnas %}
-  <section class="columna" id="columna-{{ columna.clave }}" data-columna="{{ columna.clave }}">
-    <h2>{{ columna.etiqueta }} <span class="contador" id="contador-{{ columna.clave }}">{{ columna.tareas|length }}</span></h2>
-    <div class="lista" id="lista-{{ columna.clave }}" data-columna="{{ columna.clave }}">
-      {% for tarea in columna.tareas %}
-        {% include "fragmentos/tarjeta.html" %}
-      {% endfor %}
-    </div>
-    {% with columna_clave = columna.clave, modo = "crear" %}
-      {% include "fragmentos/formulario_tarea.html" %}
-    {% endwith %}
-  </section>
-  {% endfor %}
+  {% include "fragmentos/columnas.html" %}
 </main>
 <script src="/static/tablero.js"></script>
 {% endblock %}

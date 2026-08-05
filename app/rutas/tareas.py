@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from sqlmodel import Session, select
 
 from app.database import get_session
-from app.modelos import Columna, Tarea
+from app.modelos import ETIQUETAS_COLUMNA, Columna, Tarea
 from app.plantillas import templates
 
 router = APIRouter()
@@ -15,6 +15,37 @@ def _obtener_o_404(session: Session, tarea_id: int) -> Tarea:
     if tarea is None:
         raise HTTPException(status_code=404, detail="Tarea no encontrada")
     return tarea
+
+
+@router.get("/tareas")
+def buscar_tareas(
+    request: Request,
+    buscar: str = "",
+    etiqueta: str = "",
+    session: Session = Depends(get_session),
+):
+    """Columnas filtradas por texto (título) y/o etiqueta, para la búsqueda
+    en vivo. Sin filtros, equivale al tablero completo."""
+    consulta = select(Tarea).order_by(Tarea.orden)
+    buscar = buscar.strip()
+    etiqueta = etiqueta.strip()
+    if buscar:
+        consulta = consulta.where(Tarea.titulo.ilike(f"%{buscar}%"))
+    if etiqueta:
+        consulta = consulta.where(Tarea.etiqueta.ilike(f"%{etiqueta}%"))
+
+    tareas = session.exec(consulta).all()
+    columnas = [
+        {
+            "clave": clave.value,
+            "etiqueta": ETIQUETAS_COLUMNA[clave],
+            "tareas": [t for t in tareas if t.columna == clave],
+        }
+        for clave in Columna
+    ]
+    return templates.TemplateResponse(
+        request, "fragmentos/columnas.html", {"columnas": columnas}
+    )
 
 
 @router.post("/tareas")
