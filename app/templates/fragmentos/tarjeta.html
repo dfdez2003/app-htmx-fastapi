@@ -1,4 +1,4 @@
-<article class="tarjeta" id="tarea-{{ tarea.id }}" data-id="{{ tarea.id }}">
+<article class="tarjeta{% if tarea.vencida %} vencida{% endif %}" id="tarea-{{ tarea.id }}" data-id="{{ tarea.id }}">
   <h3>{{ tarea.titulo }}</h3>
   {% if tarea.descripcion %}<p>{{ tarea.descripcion }}</p>{% endif %}
   <div class="meta">

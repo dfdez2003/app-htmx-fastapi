@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from sqlmodel import Session, select
 
 from app.database import get_session
@@ -45,7 +45,9 @@ def crear_tarea(
     session.refresh(tarea)
 
     return templates.TemplateResponse(
-        request, "fragmentos/tarjeta.html", {"tarea": tarea}
+        request,
+        "fragmentos/tarea_creada.html",
+        {"tarea": tarea, "columna_clave": columna.value, "total": len(tareas_columna) + 1},
     )
 
 
@@ -100,11 +102,16 @@ def editar_tarea(
 
 
 @router.delete("/tareas/{tarea_id}")
-def eliminar_tarea(tarea_id: int, session: Session = Depends(get_session)):
+def eliminar_tarea(request: Request, tarea_id: int, session: Session = Depends(get_session)):
     tarea = _obtener_o_404(session, tarea_id)
+    columna = tarea.columna
     session.delete(tarea)
     session.commit()
-    return Response(status_code=200)
+
+    total = len(session.exec(select(Tarea).where(Tarea.columna == columna)).all())
+    return templates.TemplateResponse(
+        request, "fragmentos/contador.html", {"columna_clave": columna.value, "total": total}
+    )
 
 
 @router.put("/tareas/{tarea_id}/mover")

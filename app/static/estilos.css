@@ -102,6 +102,12 @@ body {
 
 .tarjeta.vencida {
   border-color: #e0554f;
+  border-left: 3px solid #e0554f;
+}
+
+.tarjeta.vencida .fecha {
+  color: #c9372c;
+  font-weight: 600;
 }
 
 .tarjeta-acciones {

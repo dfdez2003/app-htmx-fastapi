@@ -19,3 +19,12 @@ class Tarea(SQLModel, table=True):
     etiqueta: str | None = None
     fecha_limite: date | None = None
     creado_en: datetime = Field(default_factory=datetime.utcnow)
+
+    @property
+    def vencida(self) -> bool:
+        """Tiene fecha límite pasada y todavía no está en "Hecho"."""
+        return (
+            self.fecha_limite is not None
+            and self.fecha_limite < date.today()
+            and self.columna != Columna.hecho
+        )
