@@ -64,9 +64,39 @@
 - **Verificar:** `pytest` pasa en limpio.
 - Commit: `test: cobertura de endpoints con TestClient`
 
-## Hito 10 — Cierre
+## Hito 10 — Categorías (modelo + panel de configuración)
+- `app/modelos.py`: `Categoria(SQLModel, table=True)` con `id, nombre, orden`.
+- `app/rutas/categorias.py`: `GET /configuracion` (página con la lista de categorías y formularios de alta/renombrar/borrar), `POST /categorias`, `PUT /categorias/{id}`, `DELETE /categorias/{id}` (sus tareas quedan con `categoria_id = None`), `PUT /categorias/{id}/mover` (intercambia `orden` con la vecina, botones ▲▼).
+- Ícono ⚙️ discreto en el header de `tablero.html` que enlaza a `/configuracion` — el panel de tareas no se satura.
+- Borrar `data/tablero.db` de desarrollo (cambia el esquema) y confirmar que resiembra limpio.
+- **Verificar:** crear/renombrar/reordenar/borrar categorías desde `/configuracion`, confirmar con `curl` o en el navegador que persiste tras F5 y que borrar una categoría no borra sus tareas.
+- Commit: `feat(categorias): modelo Categoria y panel de configuracion`
+
+## Hito 11 — Tablero por categorías (swimlanes) + prioridad
+- `Tarea` gana `categoria_id: int | None` (FK a `categoria.id`) y `prioridad: Prioridad` (enum `alta/media/baja`, default `media`) en `app/modelos.py`.
+- `tablero.html`: una fila por categoría (ordenadas por `Categoria.orden`) más una fila fija "Sin categoría", cada una con sus 3 columnas de siempre al lado. Cada celda categoría×columna es su propia `.lista` de SortableJS, todas en `group: "tablero"`.
+- `PUT /tareas/{id}/mover` acepta ahora `categoria_destino` además de `columna_destino`/`posicion`; `orden` se recalcula por el par (categoría, columna), recompactando también la celda de origen si cambió cualquiera de las dos.
+- `tarjeta.html`: indicador visual de prioridad (punto de color); `formulario_tarea.html`: selects de categoría y prioridad.
+- **Verificar:** arrastrar una tarea entre categoría×columna en un solo gesto, refrescar (F5) y confirmar que categoría/columna/orden persisten; regresión rápida de crear/editar/eliminar/buscar para confirmar que nada se rompió.
+- Commit: `feat(tablero): swimlanes por categoria y prioridad visual`
+
+## Hito 12 — Vista checklist
+- `GET /checklist` en `app/rutas/tablero.py`, plantilla `checklist.html`: lista aplanada por categoría (mismo orden que el tablero: por hacer → en progreso → hecho dentro de cada una).
+- `fragmentos/fila_checklist.html`: una tarea con ícono de estado cíclico (☐ por hacer → ◐ en progreso → ✓ hecho → vuelve a ☐).
+- `PUT /tareas/{id}/estado`: avanza al siguiente estado (mantiene categoría, va al final de la nueva celda), devuelve la fila actualizada.
+- Link de cambio de vista ("Tablero" / "Checklist") en el header, navegación normal.
+- **Verificar:** ciclar el estado de una tarea varias veces con clics, confirmar que el tablero (`/`) refleja el mismo cambio tras navegar de vuelta.
+- Commit: `feat(checklist): vista lista con estado ciclico`
+
+## Hito 13 — Búsqueda con categoría
+- Extender `GET /tareas?buscar=&etiqueta=&categoria=` para filtrar también por categoría.
+- Adaptar los fragmentos de búsqueda para servir tanto al tablero (swimlanes filtradas) como al checklist (lista filtrada).
+- **Verificar:** filtrar por categoría sola, combinada con texto/etiqueta, y sin resultados, en ambas vistas.
+- Commit: `feat(busqueda): extender filtro a categoria en ambas vistas`
+
+## Hito 14 — Cierre
 - Revisar `Dockerfile`/`docker-compose.yml` funcionan desde cero (`docker compose up --build` en carpeta limpia, sin `data/` previo).
-- Grabar GIF corto mostrando: crear, editar inline, drag-and-drop, búsqueda.
+- Grabar GIF corto mostrando: crear, editar inline, drag-and-drop entre categorías, checklist, búsqueda.
 - Completar `README.md` (cómo correr en un comando, GIF, resumen del stack).
 - **Verificar:** checklist completo de "Criterios de aceptación" en `SPEC.md`.
 - Commit: `chore: Dockerfile, docker-compose y README con GIF`
@@ -85,4 +115,8 @@
 - [x] Hito 7 — Contadores y vencidas
 - [x] Hito 8 — Búsqueda en vivo
 - [x] Hito 9 — Tests
-- [ ] Hito 10 — Cierre
+- [ ] Hito 10 — Categorías (modelo + panel de configuración)
+- [ ] Hito 11 — Tablero por categorías (swimlanes) + prioridad
+- [ ] Hito 12 — Vista checklist
+- [ ] Hito 13 — Búsqueda con categoría
+- [ ] Hito 14 — Cierre
