@@ -117,6 +117,6 @@
 - [x] Hito 9 — Tests
 - [x] Hito 10 — Categorías (modelo + panel de configuración)
 - [x] Hito 11 — Tablero por categorías (swimlanes) + prioridad
-- [ ] Hito 12 — Vista checklist
+- [x] Hito 12 — Vista checklist
 - [ ] Hito 13 — Búsqueda con categoría
 - [ ] Hito 14 — Cierre
