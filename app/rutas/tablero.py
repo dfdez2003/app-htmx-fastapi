@@ -14,3 +14,13 @@ def tablero(request: Request, session: Session = Depends(get_session)):
     tareas = session.exec(select(Tarea).order_by(Tarea.orden)).all()
     filas = construir_filas(session, tareas)
     return templates.TemplateResponse(request, "tablero.html", {"filas": filas})
+
+
+@router.get("/checklist")
+def checklist(request: Request, session: Session = Depends(get_session)):
+    """Misma información que el tablero, aplanada por categoría: cada fila
+    lista sus tareas por hacer → en progreso → hecho una tras otra, en vez
+    de en columnas separadas."""
+    tareas = session.exec(select(Tarea).order_by(Tarea.orden)).all()
+    filas = construir_filas(session, tareas)
+    return templates.TemplateResponse(request, "checklist.html", {"filas": filas})

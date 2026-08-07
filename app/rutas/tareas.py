@@ -22,6 +22,9 @@ def _fila_id(categoria_id: int | None) -> str:
     return SIN_CATEGORIA if categoria_id is None else str(categoria_id)
 
 
+ORDEN_ESTADOS = [Columna.por_hacer, Columna.en_progreso, Columna.hecho]
+
+
 @router.get("/tareas")
 def buscar_tareas(
     request: Request,
@@ -159,6 +162,44 @@ def eliminar_tarea(request: Request, tarea_id: int, session: Session = Depends(g
         request,
         "fragmentos/contador.html",
         {"fila_id": _fila_id(categoria_id), "columna_clave": columna.value, "total": total},
+    )
+
+
+@router.put("/tareas/{tarea_id}/estado")
+def ciclar_estado(request: Request, tarea_id: int, session: Session = Depends(get_session)):
+    """Avanza por_hacer → en_progreso → hecho → por_hacer. Usado por el
+    ícono de estado de la vista checklist en vez de arrastrar."""
+    tarea = _obtener_o_404(session, tarea_id)
+    indice_actual = ORDEN_ESTADOS.index(tarea.columna)
+    nueva_columna = ORDEN_ESTADOS[(indice_actual + 1) % len(ORDEN_ESTADOS)]
+
+    # Recompactar la celda de origen (misma categoría, columna vieja)
+    tareas_origen = session.exec(
+        select(Tarea)
+        .where(
+            Tarea.columna == tarea.columna,
+            Tarea.categoria_id == tarea.categoria_id,
+            Tarea.id != tarea_id,
+        )
+        .order_by(Tarea.orden)
+    ).all()
+    for indice, t in enumerate(tareas_origen):
+        t.orden = indice
+        session.add(t)
+
+    # Va al final de la celda destino (misma categoría, columna nueva)
+    tareas_destino = session.exec(
+        select(Tarea).where(Tarea.columna == nueva_columna, Tarea.categoria_id == tarea.categoria_id)
+    ).all()
+    tarea.columna = nueva_columna
+    tarea.orden = max((t.orden for t in tareas_destino), default=-1) + 1
+
+    session.add(tarea)
+    session.commit()
+    session.refresh(tarea)
+
+    return templates.TemplateResponse(
+        request, "fragmentos/fila_checklist.html", {"tarea": tarea}
     )
 
 

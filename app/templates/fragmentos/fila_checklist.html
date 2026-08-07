@@ -1,0 +1,13 @@
+<li class="item-checklist{% if tarea.vencida %} vencida{% endif %}" id="checklist-{{ tarea.id }}">
+  <button type="button" class="estado-icono" title="Cambiar estado: {{ tarea.columna.value }}"
+          hx-put="/tareas/{{ tarea.id }}/estado" hx-target="#checklist-{{ tarea.id }}" hx-swap="outerHTML">
+    {% if tarea.columna.value == "por_hacer" %}☐{% elif tarea.columna.value == "en_progreso" %}◐{% else %}✓{% endif %}
+  </button>
+  <span class="prioridad prioridad-{{ tarea.prioridad.value }}" title="Prioridad: {{ tarea.prioridad.value }}"></span>
+  <span class="item-titulo{% if tarea.columna.value == 'hecho' %} completado{% endif %}">{{ tarea.titulo }}</span>
+  {% if tarea.etiqueta %}<span class="etiqueta">{{ tarea.etiqueta }}</span>{% endif %}
+  {% if tarea.fecha_limite %}<span class="fecha">{{ tarea.fecha_limite }}</span>{% endif %}
+  <button type="button" class="boton-icono item-eliminar"
+          hx-delete="/tareas/{{ tarea.id }}" hx-target="#checklist-{{ tarea.id }}" hx-swap="outerHTML"
+          hx-confirm="¿Eliminar esta tarea?" title="Eliminar">🗑</button>
+</li>

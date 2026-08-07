@@ -46,6 +46,29 @@ body {
   background: var(--panel);
 }
 
+.cambio-vista {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.6rem;
+}
+
+.cambio-vista a {
+  text-decoration: none;
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+}
+
+.cambio-vista a:hover {
+  background: var(--panel);
+}
+
+.cambio-vista a.vista-activa {
+  background: var(--acento);
+  color: #fff;
+}
+
 .buscador {
   display: flex;
   gap: 0.5rem;
@@ -397,4 +420,79 @@ body {
   background: var(--acento);
   color: #fff;
   cursor: pointer;
+}
+
+.checklist-filas {
+  padding: 0 2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 720px;
+}
+
+.fila-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.lista-checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.item-checklist {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  padding: 0.5rem 0.6rem;
+}
+
+.item-checklist.vencida {
+  border-left: 3px solid #e0554f;
+}
+
+.item-checklist-vacio {
+  color: var(--texto-suave);
+  font-size: 0.85rem;
+  padding: 0.3rem 0;
+}
+
+.estado-icono {
+  border: 1px solid var(--borde);
+  background: var(--fondo);
+  color: var(--texto-suave);
+  cursor: pointer;
+  font-size: 0.9rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.estado-icono:hover {
+  border-color: var(--acento);
+  color: var(--acento);
+}
+
+.item-titulo {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-titulo.completado {
+  color: var(--texto-suave);
+  text-decoration: line-through;
+}
+
+.item-eliminar {
+  margin-left: auto;
 }

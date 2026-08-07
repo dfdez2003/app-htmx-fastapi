@@ -5,6 +5,10 @@
     <h1>Tablero</h1>
     <a href="/configuracion" class="config-enlace" title="Configuración">⚙️</a>
   </div>
+  <nav class="cambio-vista">
+    <a href="/" class="vista-activa">Tablero</a>
+    <a href="/checklist">Checklist</a>
+  </nav>
   <div class="buscador">
     <input type="search" name="buscar" id="buscador-texto" placeholder="Buscar por título..."
            hx-get="/tareas" hx-target="#tablero-filas" hx-swap="innerHTML"
