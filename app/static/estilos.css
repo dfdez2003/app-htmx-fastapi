@@ -22,9 +22,28 @@ body {
   padding: 1.5rem 2rem 1rem;
 }
 
+.cabecera-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .cabecera h1 {
   margin: 0;
   font-size: 1.4rem;
+}
+
+.config-enlace {
+  text-decoration: none;
+  font-size: 1.1rem;
+  opacity: 0.55;
+  border-radius: 6px;
+  padding: 0.2rem 0.4rem;
+}
+
+.config-enlace:hover {
+  opacity: 1;
+  background: var(--panel);
 }
 
 .buscador {
@@ -210,4 +229,113 @@ body {
   background: transparent;
   border-color: var(--borde);
   color: var(--texto-suave);
+}
+
+.config-volver {
+  color: var(--texto-suave);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.config-volver:hover {
+  color: var(--acento);
+}
+
+.config-categorias {
+  max-width: 480px;
+  padding: 0 2rem 2rem;
+}
+
+.config-ayuda {
+  color: var(--texto-suave);
+  font-size: 0.85rem;
+  margin-top: 0;
+}
+
+.lista-categorias {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.fila-categoria {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  padding: 0.4rem 0.5rem;
+}
+
+.fila-categoria-vacia {
+  color: var(--texto-suave);
+  font-size: 0.85rem;
+  padding: 0.4rem 0;
+}
+
+.formulario-categoria-editar {
+  display: flex;
+  flex: 1;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.formulario-categoria-editar input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  background: var(--fondo);
+  color: var(--texto);
+}
+
+.formulario-categoria-editar .boton-secundario {
+  font: inherit;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--texto-suave);
+  cursor: pointer;
+}
+
+.fila-categoria-acciones {
+  display: flex;
+  gap: 0.2rem;
+}
+
+.fila-categoria-acciones .boton-icono:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.formulario-categoria-nueva {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.formulario-categoria-nueva input {
+  flex: 1;
+  font: inherit;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--texto);
+}
+
+.formulario-categoria-nueva button {
+  font: inherit;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--acento);
+  border-radius: 6px;
+  background: var(--acento);
+  color: #fff;
+  cursor: pointer;
 }

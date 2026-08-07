@@ -1,0 +1,27 @@
+<ul class="lista-categorias" id="lista-categorias">
+  {% for categoria in categorias %}
+  <li class="fila-categoria">
+    <form class="formulario-categoria-editar" hx-put="/categorias/{{ categoria.id }}"
+          hx-target="#lista-categorias" hx-swap="outerHTML">
+      <input type="text" name="nombre" value="{{ categoria.nombre }}" required>
+      <button type="submit" class="boton-secundario">Guardar</button>
+    </form>
+    <div class="fila-categoria-acciones">
+      <button type="button" class="boton-icono" title="Subir"
+              hx-put="/categorias/{{ categoria.id }}/mover" hx-vals='{"direccion": "arriba"}'
+              hx-target="#lista-categorias" hx-swap="outerHTML"
+              {% if loop.first %}disabled{% endif %}>▲</button>
+      <button type="button" class="boton-icono" title="Bajar"
+              hx-put="/categorias/{{ categoria.id }}/mover" hx-vals='{"direccion": "abajo"}'
+              hx-target="#lista-categorias" hx-swap="outerHTML"
+              {% if loop.last %}disabled{% endif %}>▼</button>
+      <button type="button" class="boton-icono" title="Eliminar"
+              hx-delete="/categorias/{{ categoria.id }}"
+              hx-target="#lista-categorias" hx-swap="outerHTML"
+              hx-confirm="¿Eliminar &quot;{{ categoria.nombre }}&quot;? Sus tareas quedarán sin categoría.">🗑</button>
+    </div>
+  </li>
+  {% else %}
+  <li class="fila-categoria-vacia">Todavía no hay categorías.</li>
+  {% endfor %}
+</ul>

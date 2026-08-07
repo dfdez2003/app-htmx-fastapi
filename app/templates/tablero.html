@@ -1,7 +1,10 @@
 {% extends "base.html" %}
 {% block contenido %}
 <header class="cabecera">
-  <h1>Tablero</h1>
+  <div class="cabecera-fila">
+    <h1>Tablero</h1>
+    <a href="/configuracion" class="config-enlace" title="Configuración">⚙️</a>
+  </div>
   <div class="buscador">
     <input type="search" name="buscar" id="buscador-texto" placeholder="Buscar por título..."
            hx-get="/tareas" hx-target="#tablero-columnas" hx-swap="innerHTML"

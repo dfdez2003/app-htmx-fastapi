@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block contenido %}
+<header class="cabecera">
+  <h1>Configuración</h1>
+  <a href="/" class="config-volver">← Volver al tablero</a>
+</header>
+<main class="config-categorias">
+  <h2>Categorías</h2>
+  <p class="config-ayuda">Cada categoría es una fila del tablero. Borrar una no borra sus tareas — quedan como "Sin categoría".</p>
+  {% include "fragmentos/lista_categorias.html" %}
+  <form class="formulario-categoria-nueva"
+        hx-post="/categorias" hx-target="#lista-categorias" hx-swap="outerHTML"
+        hx-on::after-request="if(event.detail.successful) this.reset()">
+    <input type="text" name="nombre" placeholder="Nueva categoría..." required>
+    <button type="submit">Añadir</button>
+  </form>
+</main>
+{% endblock %}

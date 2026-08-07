@@ -3,7 +3,7 @@ from typing import Iterator
 
 from sqlmodel import Session, SQLModel, create_engine, select
 
-from app.modelos import Columna, Tarea
+from app.modelos import Categoria, Columna, Tarea
 
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
@@ -53,4 +53,19 @@ def sembrar_datos() -> None:
             ),
         ]
         session.add_all(ejemplos)
+        session.commit()
+
+
+def sembrar_categorias() -> None:
+    with Session(engine) as session:
+        if session.exec(select(Categoria)).first() is not None:
+            return
+
+        session.add_all(
+            [
+                Categoria(nombre="Escuela", orden=0),
+                Categoria(nombre="Trabajo", orden=1),
+                Categoria(nombre="Maestría", orden=2),
+            ]
+        )
         session.commit()

@@ -17,6 +17,15 @@ ETIQUETAS_COLUMNA = {
 }
 
 
+class Categoria(SQLModel, table=True):
+    """Fila del tablero (ej. "Escuela", "Trabajo"). Gestionable por el usuario
+    desde /configuracion — no es un enum fijo como Columna."""
+
+    id: int | None = Field(default=None, primary_key=True)
+    nombre: str
+    orden: int = 0
+
+
 class Tarea(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     titulo: str
