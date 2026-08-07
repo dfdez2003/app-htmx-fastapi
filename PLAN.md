@@ -115,7 +115,7 @@
 - [x] Hito 7 — Contadores y vencidas
 - [x] Hito 8 — Búsqueda en vivo
 - [x] Hito 9 — Tests
-- [ ] Hito 10 — Categorías (modelo + panel de configuración)
+- [x] Hito 10 — Categorías (modelo + panel de configuración)
 - [ ] Hito 11 — Tablero por categorías (swimlanes) + prioridad
 - [ ] Hito 12 — Vista checklist
 - [ ] Hito 13 — Búsqueda con categoría
