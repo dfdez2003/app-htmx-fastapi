@@ -7,15 +7,15 @@
   </div>
   <div class="buscador">
     <input type="search" name="buscar" id="buscador-texto" placeholder="Buscar por título..."
-           hx-get="/tareas" hx-target="#tablero-columnas" hx-swap="innerHTML"
+           hx-get="/tareas" hx-target="#tablero-filas" hx-swap="innerHTML"
            hx-trigger="keyup changed delay:300ms" hx-include="#buscador-etiqueta">
     <input type="text" name="etiqueta" id="buscador-etiqueta" placeholder="Filtrar por etiqueta..."
-           hx-get="/tareas" hx-target="#tablero-columnas" hx-swap="innerHTML"
+           hx-get="/tareas" hx-target="#tablero-filas" hx-swap="innerHTML"
            hx-trigger="keyup changed delay:300ms" hx-include="#buscador-texto">
   </div>
 </header>
-<main id="tablero-columnas" class="tablero">
-  {% include "fragmentos/columnas.html" %}
+<main id="tablero-filas" class="tablero-filas">
+  {% include "fragmentos/filas.html" %}
 </main>
 <script src="/static/tablero.js"></script>
 {% endblock %}

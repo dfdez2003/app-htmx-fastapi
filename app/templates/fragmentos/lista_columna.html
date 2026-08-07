@@ -1,8 +1,10 @@
 {% for bloque in bloques %}
-<div class="lista" id="lista-{{ bloque.columna_clave }}" data-columna="{{ bloque.columna_clave }}"{% if not loop.first %} hx-swap-oob="true"{% endif %}>
+<div class="lista" id="lista-{{ bloque.fila_id }}-{{ bloque.columna_clave }}"
+     data-columna="{{ bloque.columna_clave }}" data-categoria="{{ bloque.fila_id }}"
+     {% if not loop.first %} hx-swap-oob="true"{% endif %}>
   {% for tarea in bloque.tareas %}
     {% include "fragmentos/tarjeta.html" %}
   {% endfor %}
 </div>
-<span class="contador" id="contador-{{ bloque.columna_clave }}" hx-swap-oob="true">{{ bloque.tareas|length }}</span>
+<span class="contador" id="contador-{{ bloque.fila_id }}-{{ bloque.columna_clave }}" hx-swap-oob="true">{{ bloque.tareas|length }}</span>
 {% endfor %}

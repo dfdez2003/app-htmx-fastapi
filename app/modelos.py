@@ -17,6 +17,12 @@ ETIQUETAS_COLUMNA = {
 }
 
 
+class Prioridad(str, Enum):
+    alta = "alta"
+    media = "media"
+    baja = "baja"
+
+
 class Categoria(SQLModel, table=True):
     """Fila del tablero (ej. "Escuela", "Trabajo"). Gestionable por el usuario
     desde /configuracion — no es un enum fijo como Columna."""
@@ -35,6 +41,8 @@ class Tarea(SQLModel, table=True):
     etiqueta: str | None = None
     fecha_limite: date | None = None
     creado_en: datetime = Field(default_factory=datetime.utcnow)
+    categoria_id: int | None = Field(default=None, foreign_key="categoria.id")
+    prioridad: Prioridad = Prioridad.media
 
     @property
     def vencida(self) -> bool:

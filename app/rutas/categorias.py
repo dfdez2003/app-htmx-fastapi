@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from sqlmodel import Session, select
 
 from app.database import get_session
-from app.modelos import Categoria
+from app.modelos import Categoria, Columna, Tarea
 from app.plantillas import templates
 
 router = APIRouter()
@@ -72,10 +72,29 @@ def renombrar_categoria(
 def eliminar_categoria(
     request: Request, categoria_id: int, session: Session = Depends(get_session)
 ):
-    # Nota: cuando Tarea gane categoria_id (Hito 11), aquí hay que reasignar
-    # sus tareas a "Sin categoría" (categoria_id = None) antes de borrar.
     categoria = _obtener_o_404(session, categoria_id)
+
+    # Sus tareas no se borran: quedan como "Sin categoría".
+    huerfanas = session.exec(select(Tarea).where(Tarea.categoria_id == categoria_id)).all()
+    for tarea in huerfanas:
+        tarea.categoria_id = None
+        session.add(tarea)
+
     session.delete(categoria)
+    session.commit()
+
+    # El orden de las huérfanas venía de su celda anterior y puede chocar con
+    # el de tareas que ya estaban en "Sin categoría" — se recompacta por
+    # columna para que quede consistente (0, 1, 2... sin huecos ni empates).
+    for clave in Columna:
+        tareas_sin_categoria = session.exec(
+            select(Tarea)
+            .where(Tarea.categoria_id.is_(None), Tarea.columna == clave)
+            .order_by(Tarea.orden, Tarea.id)
+        ).all()
+        for indice, tarea in enumerate(tareas_sin_categoria):
+            tarea.orden = indice
+            session.add(tarea)
     session.commit()
 
     return _lista_categorias(request, session)

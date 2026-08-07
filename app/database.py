@@ -3,7 +3,7 @@ from typing import Iterator
 
 from sqlmodel import Session, SQLModel, create_engine, select
 
-from app.modelos import Categoria, Columna, Tarea
+from app.modelos import Categoria, Columna, Prioridad, Tarea
 
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
@@ -26,30 +26,41 @@ def sembrar_datos() -> None:
         if session.exec(select(Tarea)).first() is not None:
             return
 
+        trabajo = session.exec(select(Categoria).where(Categoria.nombre == "Trabajo")).first()
+        trabajo_id = trabajo.id if trabajo else None
+
         ejemplos = [
             Tarea(
                 titulo="Disenar el layout de columnas",
                 columna=Columna.por_hacer,
                 orden=0,
                 etiqueta="diseno",
+                categoria_id=trabajo_id,
+                prioridad=Prioridad.media,
             ),
             Tarea(
                 titulo="Escribir README con GIF",
                 columna=Columna.por_hacer,
                 orden=1,
                 etiqueta="docs",
+                categoria_id=trabajo_id,
+                prioridad=Prioridad.baja,
             ),
             Tarea(
                 titulo="Modelo Tarea con SQLModel",
                 columna=Columna.en_progreso,
                 orden=0,
                 etiqueta="backend",
+                categoria_id=trabajo_id,
+                prioridad=Prioridad.alta,
             ),
             Tarea(
                 titulo="Esqueleto FastAPI + docker-compose",
                 columna=Columna.hecho,
                 orden=0,
                 etiqueta="backend",
+                categoria_id=trabajo_id,
+                prioridad=Prioridad.media,
             ),
         ]
         session.add_all(ejemplos)

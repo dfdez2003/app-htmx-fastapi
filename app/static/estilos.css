@@ -64,23 +64,44 @@ body {
   color: var(--texto);
 }
 
-.tablero {
+.tablero-filas {
+  padding: 0 2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.fila-tablero {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.fila-titulo {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--texto-suave);
+}
+
+.fila-columnas {
   display: grid;
   grid-template-columns: repeat(3, minmax(260px, 1fr));
   gap: 1rem;
-  padding: 0 2rem 2rem;
   align-items: start;
 }
 
-.columna {
+.celda {
   background: var(--panel);
   border: 1px solid var(--borde);
   border-radius: 8px;
   padding: 0.75rem;
-  min-height: 120px;
+  min-height: 100px;
 }
 
-.columna h2 {
+.celda-titulo {
   margin: 0 0 0.75rem;
   font-size: 0.95rem;
   display: flex;
@@ -112,6 +133,29 @@ body {
 .tarjeta h3 {
   margin: 0 0 0.25rem;
   font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.prioridad {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.prioridad-alta {
+  background: #c9372c;
+}
+
+.prioridad-media {
+  background: #b5791f;
+}
+
+.prioridad-baja {
+  background: #59636e;
 }
 
 .tarjeta p {
@@ -228,6 +272,21 @@ body {
 .formulario-tarea button.boton-secundario {
   background: transparent;
   border-color: var(--borde);
+  color: var(--texto-suave);
+}
+
+.formulario-tarea select {
+  font: inherit;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  background: var(--fondo);
+  color: var(--texto);
+}
+
+.formulario-ayuda {
+  margin: 0;
+  font-size: 0.75rem;
   color: var(--texto-suave);
 }
 

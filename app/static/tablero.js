@@ -5,12 +5,17 @@
 function moverTarea(evt) {
   var tareaId = evt.item.dataset.id;
   var columnaDestino = evt.to.dataset.columna;
+  var categoriaDestino = evt.to.dataset.categoria;
   var posicion = evt.newIndex;
 
   htmx.ajax("PUT", "/tareas/" + tareaId + "/mover", {
     target: "#" + evt.to.id,
     swap: "outerHTML",
-    values: { columna_destino: columnaDestino, posicion: posicion },
+    values: {
+      columna_destino: columnaDestino,
+      categoria_destino: categoriaDestino,
+      posicion: posicion,
+    },
   });
 }
 

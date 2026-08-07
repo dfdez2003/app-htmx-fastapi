@@ -23,7 +23,7 @@ def test_crear_tarea(client, engine):
     )
     assert resp.status_code == 200
     assert "Nueva tarea" in resp.text
-    assert 'id="contador-por_hacer"' in resp.text  # oob del contador
+    assert 'id="contador-sin-por_hacer"' in resp.text  # oob del contador (sin categoría)
 
     with Session(engine) as session:
         tareas = session.exec(select(Tarea)).all()
@@ -135,7 +135,7 @@ def test_eliminar_tarea(client, engine):
 
     resp = client.delete(f"/tareas/{tarea_id}")
     assert resp.status_code == 200
-    assert 'id="contador-por_hacer"' in resp.text
+    assert 'id="contador-sin-por_hacer"' in resp.text
 
     with Session(engine) as session:
         assert session.get(Tarea, tarea_id) is None
