@@ -1,4 +1,5 @@
-<article class="tarjeta{% if tarea.vencida %} vencida{% endif %}" id="tarea-{{ tarea.id }}" data-id="{{ tarea.id }}">
+<article class="tarjeta{% if tarea.vencida %} vencida{% endif %}" id="tarea-{{ tarea.id }}" data-id="{{ tarea.id }}"
+    {% if tarea.categoria %}style="--categoria-color: {{ tarea.categoria.color }};"{% endif %}>
   <h3><span class="prioridad prioridad-{{ tarea.prioridad.value }}" title="Prioridad: {{ tarea.prioridad.value }}"></span>{{ tarea.titulo }}</h3>
   {% if tarea.descripcion %}<p>{{ tarea.descripcion }}</p>{% endif %}
   <div class="meta">

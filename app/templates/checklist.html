@@ -11,15 +11,15 @@
   </nav>
   <div class="buscador">
     <input type="search" name="buscar" id="buscador-texto" placeholder="Buscar por título..."
-           hx-get="/tareas" hx-target="#checklist-filas" hx-swap="innerHTML"
+           hx-get="/tareas" hx-target="#checklist-lista" hx-swap="innerHTML"
            hx-vals='{"vista": "checklist"}'
            hx-trigger="keyup changed delay:300ms" hx-include="#buscador-etiqueta, #buscador-categoria">
     <input type="text" name="etiqueta" id="buscador-etiqueta" placeholder="Filtrar por etiqueta..."
-           hx-get="/tareas" hx-target="#checklist-filas" hx-swap="innerHTML"
+           hx-get="/tareas" hx-target="#checklist-lista" hx-swap="innerHTML"
            hx-vals='{"vista": "checklist"}'
            hx-trigger="keyup changed delay:300ms" hx-include="#buscador-texto, #buscador-categoria">
     <select name="categoria" id="buscador-categoria" title="Filtrar por categoría"
-            hx-get="/tareas" hx-target="#checklist-filas" hx-swap="innerHTML"
+            hx-get="/tareas" hx-target="#checklist-lista" hx-swap="innerHTML"
             hx-vals='{"vista": "checklist"}'
             hx-trigger="change" hx-include="#buscador-texto, #buscador-etiqueta">
       <option value="">Todas las categorías</option>
@@ -30,7 +30,7 @@
     </select>
   </div>
 </header>
-<main id="checklist-filas" class="checklist-filas">
-  {% include "fragmentos/filas_checklist.html" %}
+<main id="checklist-lista" class="checklist-lista">
+  {% include "fragmentos/lista_checklist.html" %}
 </main>
 {% endblock %}

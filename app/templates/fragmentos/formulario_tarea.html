@@ -8,13 +8,19 @@
     <input type="date" name="fecha_limite" value="{{ tarea.fecha_limite or '' }}">
   </div>
   <div class="formulario-fila">
+    <select name="categoria" title="Categoría">
+      <option value="sin" {% if tarea.categoria_id is none %}selected{% endif %}>Sin categoría</option>
+      {% for categoria in categorias %}
+      <option value="{{ categoria.id }}" {% if tarea.categoria_id == categoria.id %}selected{% endif %}>{{ categoria.nombre }}</option>
+      {% endfor %}
+    </select>
     <select name="prioridad" title="Prioridad">
       {% for opcion in ["alta", "media", "baja"] %}
       <option value="{{ opcion }}" {% if tarea.prioridad.value == opcion %}selected{% endif %}>Prioridad {{ opcion }}</option>
       {% endfor %}
     </select>
   </div>
-  <p class="formulario-ayuda">La categoría y la columna se cambian arrastrando la tarjeta en el tablero.</p>
+  <p class="formulario-ayuda">La columna se cambia arrastrando la tarjeta en el tablero.</p>
   <div class="formulario-acciones">
     <button type="submit">Guardar</button>
     <button type="button" class="boton-secundario"
@@ -26,13 +32,20 @@
 {% else %}
 <form class="formulario-tarea formulario-crear"
       hx-post="/tareas"
-      hx-target="#lista-{{ categoria_id }}-{{ columna_clave }}"
+      hx-target="#lista-{{ columna_clave }}"
       hx-swap="beforeend"
       hx-on::after-request="if(event.detail.successful) this.reset()">
   <input type="hidden" name="columna" value="{{ columna_clave }}">
-  <input type="hidden" name="categoria" value="{{ categoria_id }}">
   <input type="text" name="titulo" placeholder="Nueva tarea..." required>
-  <input type="text" name="etiqueta" placeholder="Etiqueta (opcional)">
+  <div class="formulario-fila">
+    <input type="text" name="etiqueta" placeholder="Etiqueta (opcional)">
+    <select name="categoria" title="Categoría">
+      <option value="sin">Sin categoría</option>
+      {% for categoria in categorias %}
+      <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+      {% endfor %}
+    </select>
+  </div>
   <button type="submit">Añadir</button>
 </form>
 {% endif %}

@@ -1,0 +1,8 @@
+<ul class="lista-checklist">
+  {% for tarea in tareas %}
+    {% include "fragmentos/item_checklist.html" %}
+  {% endfor %}
+  {% if not tareas %}
+  <li class="item-checklist-vacio">Sin tareas.</li>
+  {% endif %}
+</ul>

@@ -1,4 +1,5 @@
-<li class="item-checklist{% if tarea.vencida %} vencida{% endif %}" id="checklist-{{ tarea.id }}">
+<li class="item-checklist{% if tarea.vencida %} vencida{% endif %}" id="checklist-{{ tarea.id }}"
+    {% if tarea.categoria %}style="--categoria-color: {{ tarea.categoria.color }};"{% endif %}>
   <button type="button" class="estado-icono" title="Cambiar estado: {{ tarea.columna.value }}"
           hx-put="/tareas/{{ tarea.id }}/estado" hx-target="#checklist-{{ tarea.id }}" hx-swap="outerHTML">
     {% if tarea.columna.value == "por_hacer" %}☐{% elif tarea.columna.value == "en_progreso" %}◐{% else %}✓{% endif %}

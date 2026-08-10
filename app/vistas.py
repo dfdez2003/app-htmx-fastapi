@@ -1,8 +1,11 @@
-"""Construcción de las filas del tablero (swimlanes: categoría x columna).
+"""Construcción de las estructuras que consumen las plantillas del tablero
+y del checklist. Compartido entre las rutas de página completa (GET / y
+GET /checklist) y la búsqueda en vivo (GET /tareas) para que ambas rindan
+exactamente lo mismo.
 
-Compartido entre GET / (tablero completo) y GET /tareas (búsqueda en vivo)
-para que ambos rutas rendericen exactamente la misma estructura.
-"""
+Desde el Hito 14, la categoría ya no segmenta filas: todas las tareas de
+todas las categorías se mezclan en las mismas 3 columnas / la misma lista
+de checklist, distinguidas solo por su color."""
 
 from sqlmodel import Session, select
 
@@ -18,33 +21,25 @@ def categoria_id_desde_form(valor: str) -> int | None:
 
 
 def listar_categorias(session: Session) -> list[Categoria]:
-    """Categorías ordenadas, para poblar el <select> de filtro de búsqueda
-    y el panel de configuración."""
+    """Categorías ordenadas, para poblar los <select> de categoría (filtro
+    de búsqueda, formulario de tarea) y el panel de configuración."""
     return session.exec(select(Categoria).order_by(Categoria.orden)).all()
 
 
-def construir_filas(session: Session, tareas: list[Tarea]) -> list[dict]:
-    """Agrupa `tareas` en filas por categoría (ordenadas por Categoria.orden,
-    más una fila fija "Sin categoría" al final), cada una con sus 3 columnas."""
-    categorias = listar_categorias(session)
-
-    def bloque_columnas(categoria_id: int | None) -> list[dict]:
-        return [
-            {
-                "clave": clave.value,
-                "etiqueta": ETIQUETAS_COLUMNA[clave],
-                "tareas": [
-                    t for t in tareas if t.columna == clave and t.categoria_id == categoria_id
-                ],
-            }
-            for clave in Columna
-        ]
-
-    filas = [
-        {"id": str(categoria.id), "nombre": categoria.nombre, "columnas": bloque_columnas(categoria.id)}
-        for categoria in categorias
+def construir_columnas(tareas: list[Tarea]) -> list[dict]:
+    """Agrupa `tareas` en las 3 columnas fijas, sin importar su categoría."""
+    return [
+        {
+            "clave": clave.value,
+            "etiqueta": ETIQUETAS_COLUMNA[clave],
+            "tareas": [t for t in tareas if t.columna == clave],
+        }
+        for clave in Columna
     ]
-    filas.append(
-        {"id": SIN_CATEGORIA, "nombre": "Sin categoría", "columnas": bloque_columnas(None)}
-    )
-    return filas
+
+
+def construir_checklist(tareas: list[Tarea]) -> list[Tarea]:
+    """Todas las tareas en una sola lista, ordenadas por estado (por hacer
+    → en progreso → hecho) y dentro de cada estado por su `orden`."""
+    indice_columna = {clave: i for i, clave in enumerate(Columna)}
+    return sorted(tareas, key=lambda t: (indice_columna[t.columna], t.orden))

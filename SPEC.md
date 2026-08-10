@@ -12,12 +12,12 @@ Un tablero kanban de tareas (crear, editar inline, mover entre columnas, reorden
 ## Alcance
 
 **Dentro:**
-- Un tablero por categorías (swimlanes): cada categoría es una fila, con las tres columnas fijas al lado — Por hacer / En progreso / Hecho
-- Categorías gestionables por el usuario (crear, renombrar, reordenar, borrar) desde un panel de configuración aparte del tablero; una tarea sin categoría cae en la fila fija "Sin categoría"
+- Un tablero de 3 columnas fijas — Por hacer / En progreso / Hecho — donde todas las categorías se mezclan libremente dentro de cada columna (no hay filas por categoría: la categoría es un color, no una posición)
+- Categorías gestionables por el usuario (crear, renombrar, cambiar color, borrar) desde un panel de configuración aparte del tablero; cada tarjeta/ítem se tiñe con el color de su categoría, "Sin categoría" se ve sin tinte
 - Prioridad de tarea (alta/media/baja), solo visual — no reordena nada automáticamente, el orden sigue siendo 100% manual (drag-and-drop)
-- CRUD de tareas: crear, editar inline (título, descripción, etiqueta, fecha límite, categoría, prioridad), eliminar
-- Mover tareas entre categoría×columna y reordenar dentro de una celda (drag-and-drop), persistido en servidor
-- Vista alterna "checklist": misma información aplanada en una sola lista por categoría, con un ícono de estado cíclico (☐ por hacer → ◐ en progreso → ✓ hecho) en vez de columnas espaciales
+- CRUD de tareas: crear, editar inline (título, descripción, etiqueta, fecha límite, categoría, prioridad), eliminar. La categoría se edita desde el formulario; la columna solo por arrastre
+- Mover tareas entre columnas y reordenar dentro de una (drag-and-drop), persistido en servidor
+- Vista alterna "checklist": misma información en una sola lista (sin agrupar por categoría), ordenada por estado, con un ícono de estado cíclico (☐ por hacer → ◐ en progreso → ✓ hecho) en vez de columnas espaciales
 - Búsqueda/filtro en vivo por texto, etiqueta y categoría, sin recargar página, funcional en ambas vistas
 - Contador de tareas por columna y marca visual de tareas vencidas, actualizados tras cada acción
 - Persistencia en SQLite
@@ -27,6 +27,7 @@ Un tablero kanban de tareas (crear, editar inline, mover entre columnas, reorden
 - Múltiples tableros
 - Adjuntos, comentarios, subtareas
 - Reordenamiento automático por prioridad (decisión explícita: solo indicador visual)
+- Categorías como filas/swimlanes del tablero (probado en el Hito 11, revertido en el Hito 14: dispersaba el flujo de una sola vista y no dejaba mezclar tipos de tarea en una columna)
 
 ## Stack
 
@@ -45,21 +46,22 @@ app-htmx-fastapi/
 ├── app/
 │   ├── main.py                     # FastAPI app, monta rutas, estáticos y plantillas
 │   ├── database.py                 # engine SQLModel, sesión, creación de tablas
-│   ├── modelos.py                  # Tarea, Categoria, enums Columna/Prioridad
+│   ├── modelos.py                  # Tarea, Categoria (con color), enums Columna/Prioridad
+│   ├── vistas.py                   # construir_columnas/construir_checklist, compartido por tablero/checklist/búsqueda
 │   ├── rutas/
-│   │   ├── tablero.py              # GET / -> tablero por categorías; GET /checklist -> vista lista
+│   │   ├── tablero.py              # GET / -> 3 columnas; GET /checklist -> lista única
 │   │   ├── tareas.py               # crear/editar/mover/ciclar-estado/eliminar/buscar (fragmentos HTMX)
-│   │   └── categorias.py           # GET /configuracion + CRUD de categorías
+│   │   └── categorias.py           # GET /configuracion + CRUD de categorías (nombre + color)
 │   ├── templates/
 │   │   ├── base.html
-│   │   ├── tablero.html            # filas por categoría x 3 columnas (swimlanes)
-│   │   ├── checklist.html          # vista lista aplanada por categoría
+│   │   ├── tablero.html            # 3 columnas fijas, categorías mezcladas y coloreadas
+│   │   ├── checklist.html          # lista única, ordenada por estado
 │   │   ├── configuracion.html      # gestión de categorías (panel escondido)
 │   │   └── fragmentos/
-│   │       ├── tarjeta.html        # una tarea (vista, tablero)
-│   │       ├── fila_checklist.html # una tarea (vista, checklist)
-│   │       ├── formulario_tarea.html  # tarjeta en modo edición/creación
-│   │       └── columna.html        # columna completa (para búsqueda/filtro)
+│   │       ├── tarjeta.html        # una tarea (vista, tablero) — tinte por categoria.color
+│   │       ├── item_checklist.html # una tarea (vista, checklist) — mismo tinte
+│   │       ├── formulario_tarea.html  # tarjeta en modo edición/creación (incluye select de categoría)
+│   │       └── columnas.html       # las 3 columnas completas (para búsqueda/filtro)
 │   └── static/
 │       ├── estilos.css
 │       └── vendor/                 # htmx.min.js, sortable.min.js (vendorizados, sin CDN)
@@ -74,31 +76,31 @@ app-htmx-fastapi/
 ## Endpoints
 
 ```
-GET    /                                  -> tablero por categorías (swimlanes, server-rendered)
-GET    /checklist                         -> vista checklist (lista aplanada por categoría)
-GET    /tareas?buscar=&etiqueta=&categoria= -> celdas/filas filtradas (fragmento, para búsqueda en vivo; sirve ambas vistas)
+GET    /                                  -> tablero de 3 columnas (server-rendered, categorías mezcladas)
+GET    /checklist                         -> vista checklist (lista única, ordenada por estado)
+GET    /tareas?buscar=&etiqueta=&categoria=&vista= -> columnas o lista filtradas (fragmento, para búsqueda en vivo; vista=tablero|checklist decide el fragmento)
 POST   /tareas                            -> crea tarea, devuelve la tarjeta insertada + oob del contador de su columna
 GET    /tareas/{id}                       -> tarjeta individual (vista); usado por "Cancelar" al salir de edición sin guardar
 GET    /tareas/{id}/editar                -> formulario inline (reemplaza la tarjeta; incluye selects de categoría/prioridad)
-PUT    /tareas/{id}                       -> guarda edición, devuelve la tarjeta actualizada
+PUT    /tareas/{id}                       -> guarda edición (incluida categoría), devuelve la tarjeta actualizada
 DELETE /tareas/{id}                       -> elimina, respuesta vacía (el nodo desaparece vía hx-swap) + oob del contador
-PUT    /tareas/{id}/mover                 -> cambia categoría, columna y/o posición; devuelve celda(s) origen y destino actualizadas
+PUT    /tareas/{id}/mover                 -> cambia columna y/o posición; devuelve columna(s) origen y destino actualizadas
 PUT    /tareas/{id}/estado                -> cicla el estado (por_hacer→en_progreso→hecho→por_hacer); usado por el ícono de la vista checklist
 GET    /configuracion                     -> panel de gestión de categorías (página aparte, enlazada con un ícono discreto)
-POST   /categorias                        -> crea categoría
-PUT    /categorias/{id}                   -> renombra categoría
+POST   /categorias                        -> crea categoría (color asignado por turno de una paleta fija)
+PUT    /categorias/{id}                   -> actualiza nombre y color
 DELETE /categorias/{id}                   -> borra categoría; sus tareas quedan como "Sin categoría"
-PUT    /categorias/{id}/mover             -> reordena (intercambia con la vecina, botones ▲▼)
 ```
 
 ## Patrones de interacción (el punto del proyecto)
 
-- **Edición inline:** cada tarjeta es su propia unidad HTMX. `hx-get` carga el formulario en el lugar de la tarjeta; `hx-put` guarda y la reemplaza por la vista de nuevo. Nunca hay un modal ni un router de cliente.
-- **Arrastrar y soltar (swimlanes):** SortableJS solo detecta el gesto y dispara un callback; ese callback hace un `hx-post` a `/tareas/{id}/mover` con categoría, columna y posición nuevas. Todas las celdas (categoría × columna) comparten `group: "tablero"`, así que un solo arrastre puede cambiar categoría y estado a la vez. HTMX intercambia la(s) celda(s) origen/destino con lo que responde el servidor — el cliente nunca calcula ni asume el orden final.
-- **Prioridad:** puramente visual (indicador de color en la tarjeta); nunca reordena nada por sí sola, para no pelearse con el orden manual de drag-and-drop.
-- **Vista checklist:** mismos datos que el tablero, aplanados en una lista por categoría; el ícono de estado (`PUT /tareas/{id}/estado`) reemplaza el drag-and-drop para cambiar de columna con un clic — más rápido para marcar tareas sin abrir el tablero completo.
-- **Panel de categorías escondido:** vive en `/configuracion`, fuera del flujo principal — el tablero se mantiene limpio; se llega ahí por un ícono discreto, no por un modal.
-- **Búsqueda en vivo:** input con `hx-trigger="keyup changed delay:300ms"` apuntando a `/tareas`, sin JS de filtrado en cliente; funciona igual en tablero y checklist.
+- **Edición inline:** cada tarjeta es su propia unidad HTMX. `hx-get` carga el formulario en el lugar de la tarjeta; `hx-put` guarda y la reemplaza por la vista de nuevo. Nunca hay un modal ni un router de cliente. Como la categoría ya no determina la posición de la tarjeta (Hito 14), se edita ahí mismo sin reubicar nada; la columna sigue siendo solo por arrastre porque un swap in-place no puede mover el nodo a otra lista.
+- **Arrastrar y soltar (columnas):** SortableJS solo detecta el gesto y dispara un callback; ese callback hace un `hx-put` a `/tareas/{id}/mover` con columna y posición nuevas. Las 3 listas comparten `group: "tablero"`. HTMX intercambia la(s) columna(s) origen/destino con lo que responde el servidor — el cliente nunca calcula ni asume el orden final.
+- **Color de categoría:** cada tarjeta/ítem se pinta con un tinte suave del color de su categoría vía `color-mix()` en CSS, leyendo una custom property (`--categoria-color`) puesta inline por la plantilla; sin categoría, la property no existe y el `var(..., fallback)` cae al fondo normal — sin lógica de color en Python.
+- **Prioridad:** puramente visual (indicador de color en la tarjeta, distinto del color de categoría); nunca reordena nada por sí sola, para no pelearse con el orden manual de drag-and-drop.
+- **Vista checklist:** mismos datos que el tablero, en una sola lista ordenada por estado (no agrupada por categoría — mismo criterio de "todo junto, diferenciado por color" que el tablero); el ícono de estado (`PUT /tareas/{id}/estado`) reemplaza el drag-and-drop para cambiar de columna con un clic.
+- **Panel de categorías escondido:** vive en `/configuracion`, fuera del flujo principal — el tablero se mantiene limpio; se llega ahí por un ícono discreto, no por un modal. Lo único editable de una categoría es nombre y color — ya no tiene una posición visual que reordenar.
+- **Búsqueda en vivo:** input con `hx-trigger="keyup changed delay:300ms"` apuntando a `/tareas`, sin JS de filtrado en cliente; funciona igual en tablero y checklist (el parámetro `vista` decide qué fragmento devuelve el mismo endpoint).
 - **Contadores y vencidas:** se actualizan con `hx-swap-oob` en la respuesta de crear/mover/eliminar, para no tener que re-renderizar la columna completa por un número.
 
 ## Criterios de aceptación
@@ -108,9 +110,9 @@ PUT    /categorias/{id}/mover             -> reordena (intercambia con la vecina
 - [ ] El orden tras arrastrar y soltar sobrevive un refresh del navegador (el servidor lo persistió).
 - [ ] La búsqueda en vivo filtra por texto, etiqueta y categoría con debounce, sin parpadeos, en ambas vistas.
 - [ ] Contadores por columna y marca de vencidas correctos tras cada acción.
-- [ ] Categorías gestionables desde `/configuracion` (crear/renombrar/reordenar/borrar), sin tocar código.
-- [ ] El tablero permite arrastrar una tarea entre categoría×columna en un solo gesto.
-- [ ] La vista checklist refleja el mismo estado que el tablero y permite ciclar por hacer→en progreso→hecho con un clic.
+- [ ] Categorías gestionables desde `/configuracion` (crear/renombrar/cambiar color/borrar), sin tocar código.
+- [ ] El tablero mezcla todas las categorías dentro de cada columna, diferenciadas solo por color; editar la categoría de una tarea no la reubica.
+- [ ] La vista checklist refleja el mismo estado que el tablero, en una sola lista, y permite ciclar por hacer→en progreso→hecho con un clic.
 - [ ] Sin JS de aplicación custom más allá del callback de SortableJS: cero framework SPA, cero build step.
 - [ ] Tests con `pytest` + `TestClient` cubren crear, editar, mover, eliminar, categorías y ciclo de estado.
 - [ ] README con GIF mostrando drag-and-drop, edición inline, categorías y checklist.
@@ -130,7 +132,8 @@ PUT    /categorias/{id}/mover             -> reordena (intercambia con la vecina
 11. `feat(tablero): swimlanes por categoria y prioridad visual`
 12. `feat(checklist): vista lista con estado ciclico`
 13. `feat(busqueda): extender filtro a categoria en ambas vistas`
-14. `chore: Dockerfile, docker-compose y README con GIF`
+14. `refactor(tablero): categorias por color en vez de swimlanes, tablero y checklist planos`
+15. `chore: Dockerfile, docker-compose y README con GIF`
 
 ## Notas para Claude
 

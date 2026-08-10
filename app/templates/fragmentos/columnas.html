@@ -1,0 +1,11 @@
+{% for columna in columnas %}
+<section class="columna">
+  <h2 class="columna-titulo">{{ columna.etiqueta }} <span class="contador" id="contador-{{ columna.clave }}">{{ columna.tareas|length }}</span></h2>
+  <div class="lista" id="lista-{{ columna.clave }}" data-columna="{{ columna.clave }}">
+    {% for tarea in columna.tareas %}{% include "fragmentos/tarjeta.html" %}{% endfor %}
+  </div>
+  {% with columna_clave = columna.clave, modo = "crear" %}
+    {% include "fragmentos/formulario_tarea.html" %}
+  {% endwith %}
+</section>
+{% endfor %}

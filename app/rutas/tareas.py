@@ -6,7 +6,13 @@ from sqlmodel import Session, select
 from app.database import get_session
 from app.modelos import Columna, Prioridad, Tarea
 from app.plantillas import templates
-from app.vistas import SIN_CATEGORIA, categoria_id_desde_form, construir_filas
+from app.vistas import (
+    SIN_CATEGORIA,
+    categoria_id_desde_form,
+    construir_checklist,
+    construir_columnas,
+    listar_categorias,
+)
 
 router = APIRouter()
 
@@ -16,10 +22,6 @@ def _obtener_o_404(session: Session, tarea_id: int) -> Tarea:
     if tarea is None:
         raise HTTPException(status_code=404, detail="Tarea no encontrada")
     return tarea
-
-
-def _fila_id(categoria_id: int | None) -> str:
-    return SIN_CATEGORIA if categoria_id is None else str(categoria_id)
 
 
 ORDEN_ESTADOS = [Columna.por_hacer, Columna.en_progreso, Columna.hecho]
@@ -34,12 +36,11 @@ def buscar_tareas(
     vista: str = "tablero",
     session: Session = Depends(get_session),
 ):
-    """Filas filtradas por texto (título), etiqueta y/o categoría, para la
+    """Tareas filtradas por texto (título), etiqueta y/o categoría, para la
     búsqueda en vivo. Sin filtros, equivale a la vista completa.
 
-    `vista` decide el fragmento de salida: "tablero" (swimlanes, default)
-    o "checklist" (lista aplanada) — mismas filas, distinto renderizado,
-    para que el mismo endpoint sirva a ambas páginas."""
+    `vista` decide el fragmento de salida: "tablero" (3 columnas, default)
+    o "checklist" (lista única) — mismas tareas, distinto renderizado."""
     consulta = select(Tarea).order_by(Tarea.orden)
     buscar = buscar.strip()
     etiqueta = etiqueta.strip()
@@ -52,9 +53,15 @@ def buscar_tareas(
         consulta = consulta.where(Tarea.categoria_id == categoria_id_desde_form(categoria))
 
     tareas = session.exec(consulta).all()
-    filas = construir_filas(session, tareas)
-    plantilla = "fragmentos/filas_checklist.html" if vista == "checklist" else "fragmentos/filas.html"
-    return templates.TemplateResponse(request, plantilla, {"filas": filas})
+
+    if vista == "checklist":
+        return templates.TemplateResponse(
+            request, "fragmentos/lista_checklist.html", {"tareas": construir_checklist(tareas)}
+        )
+    return templates.TemplateResponse(
+        request, "fragmentos/columnas.html",
+        {"columnas": construir_columnas(tareas), "categorias": listar_categorias(session)},
+    )
 
 
 @router.post("/tareas")
@@ -72,10 +79,8 @@ def crear_tarea(
 
     categoria_id = categoria_id_desde_form(categoria)
 
-    tareas_celda = session.exec(
-        select(Tarea).where(Tarea.columna == columna, Tarea.categoria_id == categoria_id)
-    ).all()
-    siguiente_orden = max((t.orden for t in tareas_celda), default=-1) + 1
+    tareas_columna = session.exec(select(Tarea).where(Tarea.columna == columna)).all()
+    siguiente_orden = max((t.orden for t in tareas_columna), default=-1) + 1
 
     tarea = Tarea(
         titulo=titulo,
@@ -94,8 +99,7 @@ def crear_tarea(
         {
             "tarea": tarea,
             "columna_clave": columna.value,
-            "fila_id": _fila_id(categoria_id),
-            "total": len(tareas_celda) + 1,
+            "total": len(tareas_columna) + 1,
         },
     )
 
@@ -116,7 +120,7 @@ def formulario_editar(request: Request, tarea_id: int, session: Session = Depend
     return templates.TemplateResponse(
         request,
         "fragmentos/formulario_tarea.html",
-        {"modo": "editar", "tarea": tarea},
+        {"modo": "editar", "tarea": tarea, "categorias": listar_categorias(session)},
     )
 
 
@@ -128,6 +132,7 @@ def editar_tarea(
     descripcion: str = Form(""),
     etiqueta: str = Form(""),
     fecha_limite: str = Form(""),
+    categoria: str = Form(SIN_CATEGORIA),
     prioridad: Prioridad = Form(Prioridad.media),
     session: Session = Depends(get_session),
 ):
@@ -137,13 +142,15 @@ def editar_tarea(
     if not titulo:
         raise HTTPException(status_code=422, detail="El título es obligatorio")
 
-    # Categoría y columna no se tocan aquí — se cambian arrastrando en el
-    # tablero (igual que ya pasaba con columna antes de este hito), para no
-    # dejar la tarjeta visualmente en la celda vieja tras un swap in-place.
+    # La columna no se toca aquí — se cambia arrastrando en el tablero (un
+    # swap in-place no puede reubicar la tarjeta a otra lista). La categoría
+    # sí es editable desde el formulario: desde el Hito 14 solo cambia el
+    # color de la tarjeta, no su posición, así que no hay nada que reubicar.
     tarea.titulo = titulo
     tarea.descripcion = descripcion.strip()
     tarea.etiqueta = etiqueta.strip() or None
     tarea.fecha_limite = date.fromisoformat(fecha_limite) if fecha_limite else None
+    tarea.categoria_id = categoria_id_desde_form(categoria)
     tarea.prioridad = prioridad
 
     session.add(tarea)
@@ -159,19 +166,14 @@ def editar_tarea(
 def eliminar_tarea(request: Request, tarea_id: int, session: Session = Depends(get_session)):
     tarea = _obtener_o_404(session, tarea_id)
     columna = tarea.columna
-    categoria_id = tarea.categoria_id
     session.delete(tarea)
     session.commit()
 
-    total = len(
-        session.exec(
-            select(Tarea).where(Tarea.columna == columna, Tarea.categoria_id == categoria_id)
-        ).all()
-    )
+    total = len(session.exec(select(Tarea).where(Tarea.columna == columna)).all())
     return templates.TemplateResponse(
         request,
         "fragmentos/contador.html",
-        {"fila_id": _fila_id(categoria_id), "columna_clave": columna.value, "total": total},
+        {"columna_clave": columna.value, "total": total},
     )
 
 
@@ -183,24 +185,18 @@ def ciclar_estado(request: Request, tarea_id: int, session: Session = Depends(ge
     indice_actual = ORDEN_ESTADOS.index(tarea.columna)
     nueva_columna = ORDEN_ESTADOS[(indice_actual + 1) % len(ORDEN_ESTADOS)]
 
-    # Recompactar la celda de origen (misma categoría, columna vieja)
+    # Recompactar la columna de origen
     tareas_origen = session.exec(
         select(Tarea)
-        .where(
-            Tarea.columna == tarea.columna,
-            Tarea.categoria_id == tarea.categoria_id,
-            Tarea.id != tarea_id,
-        )
+        .where(Tarea.columna == tarea.columna, Tarea.id != tarea_id)
         .order_by(Tarea.orden)
     ).all()
     for indice, t in enumerate(tareas_origen):
         t.orden = indice
         session.add(t)
 
-    # Va al final de la celda destino (misma categoría, columna nueva)
-    tareas_destino = session.exec(
-        select(Tarea).where(Tarea.columna == nueva_columna, Tarea.categoria_id == tarea.categoria_id)
-    ).all()
+    # Va al final de la columna destino
+    tareas_destino = session.exec(select(Tarea).where(Tarea.columna == nueva_columna)).all()
     tarea.columna = nueva_columna
     tarea.orden = max((t.orden for t in tareas_destino), default=-1) + 1
 
@@ -209,7 +205,7 @@ def ciclar_estado(request: Request, tarea_id: int, session: Session = Depends(ge
     session.refresh(tarea)
 
     return templates.TemplateResponse(
-        request, "fragmentos/fila_checklist.html", {"tarea": tarea}
+        request, "fragmentos/item_checklist.html", {"tarea": tarea}
     )
 
 
@@ -218,43 +214,33 @@ def mover_tarea(
     request: Request,
     tarea_id: int,
     columna_destino: Columna = Form(...),
-    categoria_destino: str = Form(SIN_CATEGORIA),
     posicion: int = Form(...),
     session: Session = Depends(get_session),
 ):
     tarea = _obtener_o_404(session, tarea_id)
     columna_origen = tarea.columna
-    categoria_origen_id = tarea.categoria_id
-    categoria_destino_id = categoria_id_desde_form(categoria_destino)
-    cambia_celda = (columna_origen, categoria_origen_id) != (columna_destino, categoria_destino_id)
+    cambia_columna = columna_origen != columna_destino
 
-    # Recalcular la celda destino insertando la tarea en la posición pedida
-    # (se excluye a sí misma de la consulta: si es un reordenamiento dentro
-    # de la misma celda, esto es lo que permite "sacarla y reinsertarla").
+    # Recalcular la columna destino insertando la tarea en la posición
+    # pedida (se excluye a sí misma de la consulta: si es un reordenamiento
+    # dentro de la misma columna, esto permite "sacarla y reinsertarla").
     tareas_destino = session.exec(
         select(Tarea)
-        .where(
-            Tarea.columna == columna_destino,
-            Tarea.categoria_id == categoria_destino_id,
-            Tarea.id != tarea_id,
-        )
+        .where(Tarea.columna == columna_destino, Tarea.id != tarea_id)
         .order_by(Tarea.orden)
     ).all()
     posicion = max(0, min(posicion, len(tareas_destino)))
     tareas_destino.insert(posicion, tarea)
 
     tarea.columna = columna_destino
-    tarea.categoria_id = categoria_destino_id
     for indice, t in enumerate(tareas_destino):
         t.orden = indice
         session.add(t)
 
-    # Si cambió de celda, recompactar también el orden de la celda origen
-    if cambia_celda:
+    # Si cambió de columna, recompactar también el orden de la columna origen
+    if cambia_columna:
         tareas_origen = session.exec(
-            select(Tarea)
-            .where(Tarea.columna == columna_origen, Tarea.categoria_id == categoria_origen_id)
-            .order_by(Tarea.orden)
+            select(Tarea).where(Tarea.columna == columna_origen).order_by(Tarea.orden)
         ).all()
         for indice, t in enumerate(tareas_origen):
             t.orden = indice
@@ -263,31 +249,15 @@ def mover_tarea(
     session.commit()
 
     tareas_destino_final = session.exec(
-        select(Tarea)
-        .where(Tarea.columna == columna_destino, Tarea.categoria_id == categoria_destino_id)
-        .order_by(Tarea.orden)
+        select(Tarea).where(Tarea.columna == columna_destino).order_by(Tarea.orden)
     ).all()
-    bloques = [
-        {
-            "fila_id": _fila_id(categoria_destino_id),
-            "columna_clave": columna_destino.value,
-            "tareas": tareas_destino_final,
-        }
-    ]
+    bloques = [{"columna_clave": columna_destino.value, "tareas": tareas_destino_final}]
 
-    if cambia_celda:
+    if cambia_columna:
         tareas_origen_final = session.exec(
-            select(Tarea)
-            .where(Tarea.columna == columna_origen, Tarea.categoria_id == categoria_origen_id)
-            .order_by(Tarea.orden)
+            select(Tarea).where(Tarea.columna == columna_origen).order_by(Tarea.orden)
         ).all()
-        bloques.append(
-            {
-                "fila_id": _fila_id(categoria_origen_id),
-                "columna_clave": columna_origen.value,
-                "tareas": tareas_origen_final,
-            }
-        )
+        bloques.append({"columna_clave": columna_origen.value, "tareas": tareas_origen_final})
 
     return templates.TemplateResponse(
         request, "fragmentos/lista_columna.html", {"bloques": bloques}

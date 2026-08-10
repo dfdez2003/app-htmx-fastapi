@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from sqlmodel import Session, select
 
 from app.database import get_session
-from app.modelos import Categoria, Columna, Tarea
+from app.modelos import PALETA_CATEGORIAS, Categoria, Tarea
 from app.plantillas import templates
 
 router = APIRouter()
@@ -42,18 +42,20 @@ def crear_categoria(
 
     existentes = session.exec(select(Categoria)).all()
     siguiente_orden = max((c.orden for c in existentes), default=-1) + 1
+    color = PALETA_CATEGORIAS[len(existentes) % len(PALETA_CATEGORIAS)]
 
-    session.add(Categoria(nombre=nombre, orden=siguiente_orden))
+    session.add(Categoria(nombre=nombre, orden=siguiente_orden, color=color))
     session.commit()
 
     return _lista_categorias(request, session)
 
 
 @router.put("/categorias/{categoria_id}")
-def renombrar_categoria(
+def editar_categoria(
     request: Request,
     categoria_id: int,
     nombre: str = Form(...),
+    color: str = Form(...),
     session: Session = Depends(get_session),
 ):
     categoria = _obtener_o_404(session, categoria_id)
@@ -62,6 +64,7 @@ def renombrar_categoria(
         raise HTTPException(status_code=422, detail="El nombre es obligatorio")
 
     categoria.nombre = nombre
+    categoria.color = color
     session.add(categoria)
     session.commit()
 
@@ -74,7 +77,9 @@ def eliminar_categoria(
 ):
     categoria = _obtener_o_404(session, categoria_id)
 
-    # Sus tareas no se borran: quedan como "Sin categoría".
+    # Sus tareas no se borran: quedan como "Sin categoría" (pierden el
+    # color, nada más — el orden ya vive por columna, no por categoría,
+    # así que no hay nada que recompactar).
     huerfanas = session.exec(select(Tarea).where(Tarea.categoria_id == categoria_id)).all()
     for tarea in huerfanas:
         tarea.categoria_id = None
@@ -82,45 +87,5 @@ def eliminar_categoria(
 
     session.delete(categoria)
     session.commit()
-
-    # El orden de las huérfanas venía de su celda anterior y puede chocar con
-    # el de tareas que ya estaban en "Sin categoría" — se recompacta por
-    # columna para que quede consistente (0, 1, 2... sin huecos ni empates).
-    for clave in Columna:
-        tareas_sin_categoria = session.exec(
-            select(Tarea)
-            .where(Tarea.categoria_id.is_(None), Tarea.columna == clave)
-            .order_by(Tarea.orden, Tarea.id)
-        ).all()
-        for indice, tarea in enumerate(tareas_sin_categoria):
-            tarea.orden = indice
-            session.add(tarea)
-    session.commit()
-
-    return _lista_categorias(request, session)
-
-
-@router.put("/categorias/{categoria_id}/mover")
-def mover_categoria(
-    request: Request,
-    categoria_id: int,
-    direccion: str = Form(...),
-    session: Session = Depends(get_session),
-):
-    categoria = _obtener_o_404(session, categoria_id)
-    categorias = session.exec(select(Categoria).order_by(Categoria.orden)).all()
-    indice = categorias.index(categoria)
-
-    vecina = None
-    if direccion == "arriba" and indice > 0:
-        vecina = categorias[indice - 1]
-    elif direccion == "abajo" and indice < len(categorias) - 1:
-        vecina = categorias[indice + 1]
-
-    if vecina is not None:
-        categoria.orden, vecina.orden = vecina.orden, categoria.orden
-        session.add(categoria)
-        session.add(vecina)
-        session.commit()
 
     return _lista_categorias(request, session)

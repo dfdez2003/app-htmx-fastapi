@@ -74,9 +74,9 @@ def sembrar_categorias() -> None:
 
         session.add_all(
             [
-                Categoria(nombre="Escuela", orden=0),
-                Categoria(nombre="Trabajo", orden=1),
-                Categoria(nombre="Maestría", orden=2),
+                Categoria(nombre="Escuela", orden=0, color="#4f8ef7"),
+                Categoria(nombre="Trabajo", orden=1, color="#f2994a"),
+                Categoria(nombre="Maestría", orden=2, color="#9b59b6"),
             ]
         )
         session.commit()

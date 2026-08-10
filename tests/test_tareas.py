@@ -23,7 +23,7 @@ def test_crear_tarea(client, engine):
     )
     assert resp.status_code == 200
     assert "Nueva tarea" in resp.text
-    assert 'id="contador-sin-por_hacer"' in resp.text  # oob del contador (sin categoría)
+    assert 'id="contador-por_hacer"' in resp.text  # oob del contador
 
     with Session(engine) as session:
         tareas = session.exec(select(Tarea)).all()
@@ -135,7 +135,7 @@ def test_eliminar_tarea(client, engine):
 
     resp = client.delete(f"/tareas/{tarea_id}")
     assert resp.status_code == 200
-    assert 'id="contador-sin-por_hacer"' in resp.text
+    assert 'id="contador-por_hacer"' in resp.text
 
     with Session(engine) as session:
         assert session.get(Tarea, tarea_id) is None
@@ -296,4 +296,87 @@ def test_busqueda_con_vista_checklist_devuelve_fragmento_de_lista(client, engine
     assert resp.status_code == 200
     assert "Una tarea" in resp.text
     assert "estado-icono" in resp.text
-    assert "fila-columnas" not in resp.text
+    assert "columna-titulo" not in resp.text
+
+
+# --- categorías (color, no posición) -----------------------------------------
+
+
+def test_crear_categoria_asigna_color_por_turno(client, engine):
+    _crear_categoria(client, engine, "Escuela")
+    _crear_categoria(client, engine, "Trabajo")
+
+    with Session(engine) as session:
+        categorias = session.exec(select(Categoria).order_by(Categoria.orden)).all()
+    assert categorias[0].color != categorias[1].color
+    assert all(c.color for c in categorias)
+
+
+def test_editar_categoria_actualiza_nombre_y_color(client, engine):
+    categoria_id = _crear_categoria(client, engine, "Escuela")
+
+    resp = client.put(
+        f"/categorias/{categoria_id}", data={"nombre": "Universidad", "color": "#123456"}
+    )
+    assert resp.status_code == 200
+    assert "Universidad" in resp.text
+
+    with Session(engine) as session:
+        categoria = session.get(Categoria, categoria_id)
+    assert categoria.nombre == "Universidad"
+    assert categoria.color == "#123456"
+
+
+def test_eliminar_categoria_no_borra_sus_tareas(client, engine):
+    categoria_id = _crear_categoria(client, engine, "Escuela")
+    client.post(
+        "/tareas", data={"titulo": "Tarea huerfana", "columna": "por_hacer", "categoria": str(categoria_id)}
+    )
+    with Session(engine) as session:
+        tarea_id = session.exec(select(Tarea).where(Tarea.titulo == "Tarea huerfana")).one().id
+
+    resp = client.delete(f"/categorias/{categoria_id}")
+    assert resp.status_code == 200
+
+    with Session(engine) as session:
+        tarea = session.get(Tarea, tarea_id)
+    assert tarea is not None
+    assert tarea.categoria_id is None
+
+
+# --- categoría editable desde el formulario de tarea --------------------------
+
+
+def test_editar_tarea_actualiza_categoria(client, engine):
+    categoria_id = _crear_categoria(client, engine, "Escuela")
+    tarea_id = _crear(client, engine, titulo="Sin tipo")
+
+    resp = client.put(
+        f"/tareas/{tarea_id}",
+        data={
+            "titulo": "Sin tipo",
+            "descripcion": "",
+            "etiqueta": "",
+            "fecha_limite": "",
+            "categoria": str(categoria_id),
+        },
+    )
+    assert resp.status_code == 200
+
+    with Session(engine) as session:
+        tarea = session.get(Tarea, tarea_id)
+    assert tarea.categoria_id == categoria_id
+
+
+def test_editar_tarea_sin_columna_no_la_reubica(client, engine):
+    """La categoría se puede editar en el formulario (Hito 14) pero la
+    columna sigue siendo solo por arrastre: editar no debe moverla."""
+    tarea_id = _crear(client, engine, titulo="Fija", columna="en_progreso")
+
+    client.put(
+        f"/tareas/{tarea_id}",
+        data={"titulo": "Fija", "descripcion": "", "etiqueta": "", "fecha_limite": ""},
+    )
+
+    with Session(engine) as session:
+        assert session.get(Tarea, tarea_id).columna == "en_progreso"

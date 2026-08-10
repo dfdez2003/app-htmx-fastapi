@@ -6,7 +6,7 @@
 </header>
 <main class="config-categorias">
   <h2>Categorías</h2>
-  <p class="config-ayuda">Cada categoría es una fila del tablero. Borrar una no borra sus tareas — quedan como "Sin categoría".</p>
+  <p class="config-ayuda">Cada categoría es un color para distinguir el tipo de tarea. Borrar una no borra sus tareas — quedan como "Sin categoría".</p>
   {% include "fragmentos/lista_categorias.html" %}
   <form class="formulario-categoria-nueva"
         hx-post="/categorias" hx-target="#lista-categorias" hx-swap="outerHTML"

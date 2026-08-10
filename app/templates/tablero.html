@@ -11,13 +11,13 @@
   </nav>
   <div class="buscador">
     <input type="search" name="buscar" id="buscador-texto" placeholder="Buscar por título..."
-           hx-get="/tareas" hx-target="#tablero-filas" hx-swap="innerHTML"
+           hx-get="/tareas" hx-target="#tablero-columnas" hx-swap="innerHTML"
            hx-trigger="keyup changed delay:300ms" hx-include="#buscador-etiqueta, #buscador-categoria">
     <input type="text" name="etiqueta" id="buscador-etiqueta" placeholder="Filtrar por etiqueta..."
-           hx-get="/tareas" hx-target="#tablero-filas" hx-swap="innerHTML"
+           hx-get="/tareas" hx-target="#tablero-columnas" hx-swap="innerHTML"
            hx-trigger="keyup changed delay:300ms" hx-include="#buscador-texto, #buscador-categoria">
     <select name="categoria" id="buscador-categoria" title="Filtrar por categoría"
-            hx-get="/tareas" hx-target="#tablero-filas" hx-swap="innerHTML"
+            hx-get="/tareas" hx-target="#tablero-columnas" hx-swap="innerHTML"
             hx-trigger="change" hx-include="#buscador-texto, #buscador-etiqueta">
       <option value="">Todas las categorías</option>
       {% for categoria in categorias %}
@@ -27,8 +27,8 @@
     </select>
   </div>
 </header>
-<main id="tablero-filas" class="tablero-filas">
-  {% include "fragmentos/filas.html" %}
+<main id="tablero-columnas" class="tablero-columnas">
+  {% include "fragmentos/columnas.html" %}
 </main>
 <script src="/static/tablero.js"></script>
 {% endblock %}

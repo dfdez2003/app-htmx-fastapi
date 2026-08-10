@@ -87,36 +87,15 @@ body {
   color: var(--texto);
 }
 
-.tablero-filas {
+.tablero-columnas {
   padding: 0 2rem 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.fila-tablero {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.fila-titulo {
-  margin: 0;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--texto-suave);
-}
-
-.fila-columnas {
   display: grid;
   grid-template-columns: repeat(3, minmax(260px, 1fr));
   gap: 1rem;
   align-items: start;
 }
 
-.celda {
+.columna {
   background: var(--panel);
   border: 1px solid var(--borde);
   border-radius: 8px;
@@ -124,7 +103,7 @@ body {
   min-height: 100px;
 }
 
-.celda-titulo {
+.columna-titulo {
   margin: 0 0 0.75rem;
   font-size: 0.95rem;
   display: flex;
@@ -147,8 +126,11 @@ body {
 }
 
 .tarjeta {
-  background: var(--panel);
+  /* Sin categoría: --categoria-color no está seteada, cae al fallback
+     (var(--panel)) y el color-mix da panel puro -> sin tinte. */
+  background: color-mix(in srgb, var(--categoria-color, var(--panel)) 18%, var(--panel));
   border: 1px solid var(--borde);
+  border-left: 3px solid var(--categoria-color, var(--borde));
   border-radius: 6px;
   padding: 0.6rem 0.75rem;
 }
@@ -366,7 +348,7 @@ body {
   min-width: 0;
 }
 
-.formulario-categoria-editar input {
+.formulario-categoria-editar input[type="text"] {
   flex: 1;
   min-width: 0;
   font: inherit;
@@ -377,6 +359,17 @@ body {
   color: var(--texto);
 }
 
+.formulario-categoria-editar input[type="color"] {
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid var(--borde);
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+}
+
 .formulario-categoria-editar .boton-secundario {
   font: inherit;
   padding: 0.3rem 0.6rem;
@@ -385,16 +378,6 @@ body {
   background: transparent;
   color: var(--texto-suave);
   cursor: pointer;
-}
-
-.fila-categoria-acciones {
-  display: flex;
-  gap: 0.2rem;
-}
-
-.fila-categoria-acciones .boton-icono:disabled {
-  opacity: 0.3;
-  cursor: default;
 }
 
 .formulario-categoria-nueva {
@@ -422,18 +405,9 @@ body {
   cursor: pointer;
 }
 
-.checklist-filas {
+.checklist-lista {
   padding: 0 2rem 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
   max-width: 720px;
-}
-
-.fila-checklist {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
 }
 
 .lista-checklist {
@@ -449,8 +423,9 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: var(--panel);
+  background: color-mix(in srgb, var(--categoria-color, var(--panel)) 18%, var(--panel));
   border: 1px solid var(--borde);
+  border-left: 3px solid var(--categoria-color, transparent);
   border-radius: 6px;
   padding: 0.5rem 0.6rem;
 }
