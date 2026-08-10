@@ -30,21 +30,31 @@ def buscar_tareas(
     request: Request,
     buscar: str = "",
     etiqueta: str = "",
+    categoria: str = "",
+    vista: str = "tablero",
     session: Session = Depends(get_session),
 ):
-    """Filas filtradas por texto (título) y/o etiqueta, para la búsqueda en
-    vivo. Sin filtros, equivale al tablero completo."""
+    """Filas filtradas por texto (título), etiqueta y/o categoría, para la
+    búsqueda en vivo. Sin filtros, equivale a la vista completa.
+
+    `vista` decide el fragmento de salida: "tablero" (swimlanes, default)
+    o "checklist" (lista aplanada) — mismas filas, distinto renderizado,
+    para que el mismo endpoint sirva a ambas páginas."""
     consulta = select(Tarea).order_by(Tarea.orden)
     buscar = buscar.strip()
     etiqueta = etiqueta.strip()
+    categoria = categoria.strip()
     if buscar:
         consulta = consulta.where(Tarea.titulo.ilike(f"%{buscar}%"))
     if etiqueta:
         consulta = consulta.where(Tarea.etiqueta.ilike(f"%{etiqueta}%"))
+    if categoria:
+        consulta = consulta.where(Tarea.categoria_id == categoria_id_desde_form(categoria))
 
     tareas = session.exec(consulta).all()
     filas = construir_filas(session, tareas)
-    return templates.TemplateResponse(request, "fragmentos/filas.html", {"filas": filas})
+    plantilla = "fragmentos/filas_checklist.html" if vista == "checklist" else "fragmentos/filas.html"
+    return templates.TemplateResponse(request, plantilla, {"filas": filas})
 
 
 @router.post("/tareas")

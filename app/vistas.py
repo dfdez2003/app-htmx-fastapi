@@ -17,10 +17,16 @@ def categoria_id_desde_form(valor: str) -> int | None:
     return None if valor in ("", SIN_CATEGORIA) else int(valor)
 
 
+def listar_categorias(session: Session) -> list[Categoria]:
+    """Categorías ordenadas, para poblar el <select> de filtro de búsqueda
+    y el panel de configuración."""
+    return session.exec(select(Categoria).order_by(Categoria.orden)).all()
+
+
 def construir_filas(session: Session, tareas: list[Tarea]) -> list[dict]:
     """Agrupa `tareas` en filas por categoría (ordenadas por Categoria.orden,
     más una fila fija "Sin categoría" al final), cada una con sus 3 columnas."""
-    categorias = session.exec(select(Categoria).order_by(Categoria.orden)).all()
+    categorias = listar_categorias(session)
 
     def bloque_columnas(categoria_id: int | None) -> list[dict]:
         return [

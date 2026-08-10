@@ -1,6 +1,6 @@
 from sqlmodel import Session, select
 
-from app.modelos import Tarea
+from app.modelos import Categoria, Tarea
 
 
 def _crear(client, engine, titulo="Tarea", columna="por_hacer", etiqueta=""):
@@ -239,3 +239,61 @@ def test_busqueda_sin_filtros_devuelve_todas(client, engine):
     resp = client.get("/tareas")
     assert "Una" in resp.text
     assert "Otra" in resp.text
+
+
+def _crear_categoria(client, engine, nombre):
+    client.post("/categorias", data={"nombre": nombre})
+    with Session(engine) as session:
+        categoria = session.exec(select(Categoria).where(Categoria.nombre == nombre)).one()
+        return categoria.id
+
+
+def test_busqueda_por_categoria(client, engine):
+    escuela_id = _crear_categoria(client, engine, "Escuela")
+    client.post(
+        "/tareas", data={"titulo": "Tarea escuela", "columna": "por_hacer", "categoria": str(escuela_id)}
+    )
+    client.post("/tareas", data={"titulo": "Tarea sin categoria", "columna": "por_hacer"})
+
+    resp = client.get("/tareas", params={"categoria": str(escuela_id)})
+    assert "Tarea escuela" in resp.text
+    assert "Tarea sin categoria" not in resp.text
+
+
+def test_busqueda_por_categoria_token_sin(client, engine):
+    escuela_id = _crear_categoria(client, engine, "Escuela")
+    client.post(
+        "/tareas", data={"titulo": "Tarea escuela", "columna": "por_hacer", "categoria": str(escuela_id)}
+    )
+    client.post("/tareas", data={"titulo": "Tarea suelta", "columna": "por_hacer"})
+
+    resp = client.get("/tareas", params={"categoria": "sin"})
+    assert "Tarea suelta" in resp.text
+    assert "Tarea escuela" not in resp.text
+
+
+def test_busqueda_combinada_texto_y_categoria(client, engine):
+    escuela_id = _crear_categoria(client, engine, "Escuela")
+    trabajo_id = _crear_categoria(client, engine, "Trabajo")
+    client.post(
+        "/tareas",
+        data={"titulo": "Leer capitulo", "columna": "por_hacer", "categoria": str(escuela_id)},
+    )
+    client.post(
+        "/tareas",
+        data={"titulo": "Leer informe", "columna": "por_hacer", "categoria": str(trabajo_id)},
+    )
+
+    resp = client.get("/tareas", params={"buscar": "Leer", "categoria": str(escuela_id)})
+    assert "Leer capitulo" in resp.text
+    assert "Leer informe" not in resp.text
+
+
+def test_busqueda_con_vista_checklist_devuelve_fragmento_de_lista(client, engine):
+    _crear(client, engine, titulo="Una tarea")
+
+    resp = client.get("/tareas", params={"vista": "checklist"})
+    assert resp.status_code == 200
+    assert "Una tarea" in resp.text
+    assert "estado-icono" in resp.text
+    assert "fila-columnas" not in resp.text
