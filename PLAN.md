@@ -94,9 +94,19 @@
 - **Verificar:** filtrar por categoría sola, combinada con texto/etiqueta, y sin resultados, en ambas vistas.
 - Commit: `feat(busqueda): extender filtro a categoria en ambas vistas`
 
-## Hito 14 — Cierre
+## Hito 14 — Categorías por color en vez de swimlanes
+- Cambio de dirección post-Hito-13: las filas por categoría dispersaban el flujo y no dejaban mezclar tipos de tarea en una misma columna. Se simplifica: el tablero vuelve a 3 columnas fijas (sin filas), la categoría deja de segmentar y pasa a ser solo un color.
+- `app/modelos.py`: `Categoria` gana `color` (hex); `orden` deja de ser editable por el usuario (ya no hay filas que reordenar) — se quita `PUT /categorias/{id}/mover` y sus botones ▲▼.
+- `app/vistas.py`: `construir_filas()` se reemplaza por `construir_columnas()` (3 columnas planas, todas las categorías mezcladas) y `construir_checklist()` (una sola lista ordenada por estado, sin agrupar por categoría).
+- `tarjeta.html` e `item_checklist.html`: la tarjeta/ítem completo se tiñe con un tinte suave del color de su categoría (`color-mix()` en CSS sobre una custom property `--categoria-color` puesta inline); sin categoría, sin tinte.
+- La categoría vuelve a ser editable desde el formulario inline (ya no hace falta reubicar la tarjeta entre celdas); la columna sigue siendo solo por arrastre. `PUT /tareas/{id}/mover` pierde `categoria_destino` (ya no aplica, solo hay una lista por columna).
+- `/configuracion`: cada categoría se edita con un formulario nombre+color (`<input type="color">`), sin botones de reordenar.
+- **Verificar:** tablero con tareas de varias categorías mezcladas en la misma columna, distinguibles por color; editar la categoría de una tarea no la mueve de sitio; checklist en una sola lista; drag-and-drop entre columnas sigue funcionando; `pytest` en verde.
+- Commit: `refactor(tablero): categorias por color en vez de swimlanes, tablero y checklist planos`
+
+## Hito 15 — Cierre
 - Revisar `Dockerfile`/`docker-compose.yml` funcionan desde cero (`docker compose up --build` en carpeta limpia, sin `data/` previo).
-- Grabar GIF corto mostrando: crear, editar inline, drag-and-drop entre categorías, checklist, búsqueda.
+- Grabar GIF corto mostrando: crear, editar inline, drag-and-drop, checklist, búsqueda, colores por categoría.
 - Completar `README.md` (cómo correr en un comando, GIF, resumen del stack).
 - **Verificar:** checklist completo de "Criterios de aceptación" en `SPEC.md`.
 - Commit: `chore: Dockerfile, docker-compose y README con GIF`
@@ -119,4 +129,5 @@
 - [x] Hito 11 — Tablero por categorías (swimlanes) + prioridad
 - [x] Hito 12 — Vista checklist
 - [x] Hito 13 — Búsqueda con categoría
-- [ ] Hito 14 — Cierre
+- [x] Hito 14 — Categorías por color en vez de swimlanes
+- [ ] Hito 15 — Cierre
