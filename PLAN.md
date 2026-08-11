@@ -104,7 +104,19 @@
 - **Verificar:** tablero con tareas de varias categorías mezcladas en la misma columna, distinguibles por color; editar la categoría de una tarea no la mueve de sitio; checklist en una sola lista; drag-and-drop entre columnas sigue funcionando; `pytest` en verde.
 - Commit: `refactor(tablero): categorias por color en vez de swimlanes, tablero y checklist planos`
 
-## Hito 15 — Cierre
+## Hito 15 — Rediseño visual (guía `entrega/`)
+- Rediseño de capa de presentación siguiendo `entrega/GUIA-REDISENO.md` y `entrega/estilos.css` (aportados por el usuario): sin tocar endpoints, fragmentos HTMX, `hx-swap-oob` ni la estructura de `vistas.py`.
+- `app/static/estilos.css`: reemplazo directo por el de `entrega/` — tokens nuevos, tipografía Manrope, tema claro/medio/oscuro vía `data-tema` en `<html>`.
+- Nuevo `fragmentos/barra.html` (barra superior sticky compartida: marca, cambio de vista, botón de tema + engrane) usado por `tablero.html`, `checklist.html` y `configuracion.html`.
+- `tarjeta.html`: cabecera con banda sólida del color de categoría (`--categoria-color` + `color-mix()`), cuerpo limpio con chip de categoría, prioridad como glifo (`↑ · ↓`) en vez de punto de color. Emoji reemplazados por SVG inline.
+- `formulario_tarea.html` (crear): botón disparador ("+ Nueva tarea") que revela el formulario in-place (toggle en JS, sin endpoint nuevo).
+- `item_checklist.html` y `lista_categorias.html`: listas como superficie única, sin caja por fila; estado cíclico e íconos con SVG.
+- Encabezado de tablero/checklist gana un resumen (`N tareas · N hechas · N vencidas`), actualizado vía `hx-swap-oob` desde crear/editar/mover/eliminar/estado, igual que los contadores.
+- Botón "deshacer" en la barra (a pedido explícito, fuera de la guía original): revierte el último drag-and-drop (un solo nivel, snapshot en `app/estado.py`) vía `POST /tareas/deshacer`; se deshabilita solo cuando no hay nada que deshacer.
+- **Verificar:** `pytest` en verde; navegar tablero/checklist/configuración comprobando temas claro/medio/oscuro, colores de categoría, drag-and-drop, deshacer, disparador de nueva tarea y resumen actualizándose tras cada acción.
+- Commit: `style(rediseno): tokens, temas, barra superior compartida y deshacer`
+
+## Hito 16 — Cierre
 - Revisar `Dockerfile`/`docker-compose.yml` funcionan desde cero (`docker compose up --build` en carpeta limpia, sin `data/` previo).
 - Grabar GIF corto mostrando: crear, editar inline, drag-and-drop, checklist, búsqueda, colores por categoría.
 - Completar `README.md` (cómo correr en un comando, GIF, resumen del stack).
@@ -130,4 +142,5 @@
 - [x] Hito 12 — Vista checklist
 - [x] Hito 13 — Búsqueda con categoría
 - [x] Hito 14 — Categorías por color en vez de swimlanes
-- [ ] Hito 15 — Cierre
+- [x] Hito 15 — Rediseño visual (guía `entrega/`)
+- [ ] Hito 16 — Cierre
