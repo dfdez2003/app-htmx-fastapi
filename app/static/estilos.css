@@ -41,9 +41,13 @@
 }
 
 /* Tema oscuro: automático por preferencia del sistema y forzable con
-   <html data-tema="oscuro"> (un botón puede setear el atributo). */
+   <html data-tema="oscuro"> (un botón puede setear el atributo).
+   Excluye también data-tema="medio": si no, en un sistema con el SO en
+   oscuro esta regla pisaba --superficie/--texto (que medio no redefine
+   a propósito, para quedarse con tarjetas claras) y medio se veía
+   indistinguible de oscuro. */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-tema="claro"]) {
+  :root:not([data-tema="claro"]):not([data-tema="medio"]) {
     --fondo: #121214;
     --superficie: #1a1a1d;
     --superficie2: #242427;
@@ -389,6 +393,16 @@ svg { display: block; }
 /* Estado mientras SortableJS arrastra */
 .tarjeta.sortable-ghost { opacity: .35; }
 .tarjeta.sortable-chosen { box-shadow: var(--sombra-alta); transform: rotate(1deg); }
+
+/* Mientras hay un drag en curso en cualquier lista, se apaga el hover de
+   "levantarse" en las tarjetas vecinas — si no, compite visualmente con
+   el propio movimiento del drag al pasar el cursor por encima de otras
+   tarjetas de la misma columna (justo lo que se sentía "horrible" al
+   reordenar dentro de una columna). */
+body.arrastrando .tarjeta:hover {
+  box-shadow: var(--sombra);
+  transform: none;
+}
 
 .tarjeta-fila { display: flex; align-items: flex-start; gap: 8px; }
 

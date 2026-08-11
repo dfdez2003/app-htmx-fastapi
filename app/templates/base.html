@@ -13,12 +13,12 @@
       if (tema && tema !== "auto") document.documentElement.setAttribute("data-tema", tema);
     })();
   </script>
-  <link rel="stylesheet" href="/static/estilos.css">
+  <link rel="stylesheet" href="{{ estatico('estilos.css') }}">
   <script src="/static/vendor/htmx.min.js"></script>
   <script src="/static/vendor/sortable.min.js"></script>
 </head>
 <body>
   {% block contenido %}{% endblock %}
-  <script src="/static/tema.js"></script>
+  <script src="{{ estatico('tema.js') }}"></script>
 </body>
 </html>

@@ -5,6 +5,24 @@ from fastapi.templating import Jinja2Templates
 
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
+_DIR_STATIC = Path(__file__).parent / "static"
+
+
+def _estatico(ruta: str) -> str:
+    """URL de un archivo en app/static con un `?v=` basado en su mtime, para
+    que el navegador lo recargue solo cuando el archivo realmente cambió —
+    sin esto, un `<script src="/static/x.js">` sin querystring puede quedar
+    servido desde caché de disco del navegador indefinidamente, incluso
+    después de un deploy nuevo (nos pasó varias veces con este mismo CSS/JS
+    durante el desarrollo: el servidor respondía el archivo correcto por
+    curl, pero el navegador seguía ejecutando una versión vieja)."""
+    ruta_absoluta = _DIR_STATIC / ruta
+    version = int(ruta_absoluta.stat().st_mtime) if ruta_absoluta.exists() else 0
+    return f"/static/{ruta}?v={version}"
+
+
+templates.env.globals["estatico"] = _estatico
+
 _MESES_ES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
 
 
