@@ -4,12 +4,21 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tablero kanban</title>
+  <script>
+    // Aplica el tema guardado antes del primer pintado, para no ver un
+    // parpadeo claro→oscuro al cargar. Sin valor guardado, no se toca el
+    // atributo y manda prefers-color-scheme (ver estilos.css).
+    (function () {
+      var tema = localStorage.getItem("tema");
+      if (tema && tema !== "auto") document.documentElement.setAttribute("data-tema", tema);
+    })();
+  </script>
   <link rel="stylesheet" href="/static/estilos.css">
   <script src="/static/vendor/htmx.min.js"></script>
   <script src="/static/vendor/sortable.min.js"></script>
 </head>
 <body>
   {% block contenido %}{% endblock %}
-  <script src="/static/categoria-select.js"></script>
+  <script src="/static/tema.js"></script>
 </body>
 </html>

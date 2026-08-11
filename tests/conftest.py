@@ -3,8 +3,19 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
 
+from app import estado
 from app.database import get_session
 from app.main import app
+
+
+@pytest.fixture(autouse=True)
+def _limpiar_estado_global():
+    """app.estado vive en un módulo, no en la BD — sin esto, un test que
+    mueve una tarea deja `ultimo_movimiento` filtrándose al siguiente test,
+    que tiene su propio engine en memoria con ids que no tienen relación."""
+    estado.ultimo_movimiento = None
+    yield
+    estado.ultimo_movimiento = None
 
 
 @pytest.fixture()

@@ -43,3 +43,14 @@ def construir_checklist(tareas: list[Tarea]) -> list[Tarea]:
     → en progreso → hecho) y dentro de cada estado por su `orden`."""
     indice_columna = {clave: i for i, clave in enumerate(Columna)}
     return sorted(tareas, key=lambda t: (indice_columna[t.columna], t.orden))
+
+
+def construir_resumen(tareas: list[Tarea]) -> dict:
+    """Totales para la cabecera del tablero/checklist (`N tareas · N hechas
+    · N vencidas`). Siempre sobre el conjunto completo de tareas, no el
+    filtrado por búsqueda — es una foto del tablero entero, no del filtro."""
+    return {
+        "total": len(tareas),
+        "hechas": sum(1 for t in tareas if t.columna == Columna.hecho),
+        "vencidas": sum(1 for t in tareas if t.vencida),
+    }

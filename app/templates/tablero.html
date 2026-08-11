@@ -1,34 +1,41 @@
 {% extends "base.html" %}
 {% block contenido %}
-<header class="cabecera">
-  <div class="cabecera-fila">
-    <h1>Tablero</h1>
-    <a href="/configuracion" class="config-enlace" title="Configuración">⚙️</a>
-  </div>
-  <nav class="cambio-vista">
-    <a href="/" class="vista-activa">Tablero</a>
-    <a href="/checklist">Checklist</a>
-  </nav>
-  <div class="buscador">
-    <input type="search" name="buscar" id="buscador-texto" placeholder="Buscar por título..."
-           hx-get="/tareas" hx-target="#tablero-columnas" hx-swap="innerHTML"
-           hx-trigger="keyup changed delay:300ms" hx-include="#buscador-etiqueta, #buscador-categoria">
-    <input type="text" name="etiqueta" id="buscador-etiqueta" placeholder="Filtrar por etiqueta..."
-           hx-get="/tareas" hx-target="#tablero-columnas" hx-swap="innerHTML"
-           hx-trigger="keyup changed delay:300ms" hx-include="#buscador-texto, #buscador-categoria">
-    <select name="categoria" id="buscador-categoria" title="Filtrar por categoría"
-            hx-get="/tareas" hx-target="#tablero-columnas" hx-swap="innerHTML"
-            hx-trigger="change" hx-include="#buscador-texto, #buscador-etiqueta">
-      <option value="">Todas las categorías</option>
-      {% for categoria in categorias %}
-      <option value="{{ categoria.id }}" data-color="{{ categoria.color }}" style="background-color: {{ categoria.color }};">{{ categoria.nombre }}</option>
-      {% endfor %}
-      <option value="sin">Sin categoría</option>
-    </select>
-  </div>
-</header>
-<main id="tablero-columnas" class="tablero-columnas">
-  {% include "fragmentos/columnas.html" %}
-</main>
+{% with vista_activa = "tablero", puede_deshacer = puede_deshacer %}{% include "fragmentos/barra.html" %}{% endwith %}
+<div class="contenido">
+  <header class="cabecera">
+    <div>
+      <h1>Tablero</h1>
+      {% include "fragmentos/resumen.html" %}
+    </div>
+    <div class="buscador">
+      <div class="campo-busqueda">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+          <circle cx="7.1" cy="7.1" r="4.6" stroke="currentColor" stroke-width="1.5"></circle>
+          <path d="m10.6 10.6 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+        </svg>
+        <input type="search" name="buscar" id="buscador-texto" placeholder="Buscar por título..."
+               hx-get="/tareas" hx-target="#tablero-columnas" hx-swap="innerHTML"
+               hx-trigger="keyup changed delay:300ms" hx-include="#buscador-etiqueta, #buscador-categoria">
+      </div>
+      <div class="campo-busqueda">
+        <input type="text" name="etiqueta" id="buscador-etiqueta" placeholder="Etiqueta..."
+               hx-get="/tareas" hx-target="#tablero-columnas" hx-swap="innerHTML"
+               hx-trigger="keyup changed delay:300ms" hx-include="#buscador-texto, #buscador-categoria">
+      </div>
+      <select name="categoria" id="buscador-categoria" class="filtro" title="Filtrar por categoría"
+              hx-get="/tareas" hx-target="#tablero-columnas" hx-swap="innerHTML"
+              hx-trigger="change" hx-include="#buscador-texto, #buscador-etiqueta">
+        <option value="">Todas las categorías</option>
+        {% for categoria in categorias %}
+        <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+        {% endfor %}
+        <option value="sin">Sin categoría</option>
+      </select>
+    </div>
+  </header>
+  <main id="tablero-columnas" class="tablero-columnas">
+    {% include "fragmentos/columnas.html" %}
+  </main>
+</div>
 <script src="/static/tablero.js"></script>
 {% endblock %}

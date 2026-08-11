@@ -19,7 +19,9 @@ Un tablero kanban de tareas (crear, editar inline, mover entre columnas, reorden
 - Mover tareas entre columnas y reordenar dentro de una (drag-and-drop), persistido en servidor
 - Vista alterna "checklist": misma información en una sola lista (sin agrupar por categoría), ordenada por estado, con un ícono de estado cíclico (☐ por hacer → ◐ en progreso → ✓ hecho) en vez de columnas espaciales
 - Búsqueda/filtro en vivo por texto, etiqueta y categoría, sin recargar página, funcional en ambas vistas
-- Contador de tareas por columna y marca visual de tareas vencidas, actualizados tras cada acción
+- Contador de tareas por columna, resumen global (`N tareas · N hechas · N vencidas`) y marca visual de tareas vencidas, actualizados tras cada acción
+- Deshacer el último movimiento de tarjeta (drag-and-drop) con un clic — un solo nivel, no es un historial completo
+- Tema claro/medio/oscuro, ciclado con un botón y persistido en `localStorage`; sin elegir ninguno, sigue `prefers-color-scheme`
 - Persistencia en SQLite
 
 **Fuera:**
@@ -47,10 +49,12 @@ app-htmx-fastapi/
 │   ├── main.py                     # FastAPI app, monta rutas, estáticos y plantillas
 │   ├── database.py                 # engine SQLModel, sesión, creación de tablas
 │   ├── modelos.py                  # Tarea, Categoria (con color), enums Columna/Prioridad
-│   ├── vistas.py                   # construir_columnas/construir_checklist, compartido por tablero/checklist/búsqueda
+│   ├── vistas.py                   # construir_columnas/construir_checklist/construir_resumen, compartido por tablero/checklist/búsqueda
+│   ├── estado.py                   # último movimiento (drag-and-drop) para poder deshacerlo; en memoria, no en BD
+│   ├── plantillas.py               # Jinja2Templates + filtro fecha_corta + combinar() (concatena piezas hx-swap-oob)
 │   ├── rutas/
 │   │   ├── tablero.py              # GET / -> 3 columnas; GET /checklist -> lista única
-│   │   ├── tareas.py               # crear/editar/mover/ciclar-estado/eliminar/buscar (fragmentos HTMX)
+│   │   ├── tareas.py               # crear/editar/mover/deshacer/ciclar-estado/eliminar/buscar (fragmentos HTMX)
 │   │   └── categorias.py           # GET /configuracion + CRUD de categorías (nombre + color)
 │   ├── templates/
 │   │   ├── base.html
@@ -58,12 +62,17 @@ app-htmx-fastapi/
 │   │   ├── checklist.html          # lista única, ordenada por estado
 │   │   ├── configuracion.html      # gestión de categorías (panel escondido)
 │   │   └── fragmentos/
-│   │       ├── tarjeta.html        # una tarea (vista, tablero) — tinte por categoria.color
-│   │       ├── item_checklist.html # una tarea (vista, checklist) — mismo tinte
+│   │       ├── barra.html          # barra superior compartida: marca, cambio de vista, deshacer, tema, config
+│   │       ├── tarjeta.html        # una tarea (vista, tablero) — cabecera teñida con categoria.color
+│   │       ├── item_checklist.html # una tarea (vista, checklist)
 │   │       ├── formulario_tarea.html  # tarjeta en modo edición/creación (incluye select de categoría)
-│   │       └── columnas.html       # las 3 columnas completas (para búsqueda/filtro)
+│   │       ├── columnas.html       # las 3 columnas completas (para búsqueda/filtro)
+│   │       ├── resumen.html        # "N tareas · N hechas · N vencidas", también como oob
+│   │       └── boton_deshacer.html # estado (activo/deshabilitado) del botón deshacer, también como oob
 │   └── static/
 │       ├── estilos.css
+│       ├── tema.js                 # ciclo de tema (auto/claro/medio/oscuro), persistido en localStorage
+│       ├── tablero.js              # SortableJS + mostrar/ocultar el formulario de nueva tarea
 │       └── vendor/                 # htmx.min.js, sortable.min.js (vendorizados, sin CDN)
 ├── tests/
 │   └── test_tareas.py
@@ -84,7 +93,8 @@ GET    /tareas/{id}                       -> tarjeta individual (vista); usado p
 GET    /tareas/{id}/editar                -> formulario inline (reemplaza la tarjeta; incluye selects de categoría/prioridad)
 PUT    /tareas/{id}                       -> guarda edición (incluida categoría), devuelve la tarjeta actualizada
 DELETE /tareas/{id}                       -> elimina, respuesta vacía (el nodo desaparece vía hx-swap) + oob del contador
-PUT    /tareas/{id}/mover                 -> cambia columna y/o posición; devuelve columna(s) origen y destino actualizadas
+PUT    /tareas/{id}/mover                 -> cambia columna y/o posición; devuelve columna(s) origen y destino actualizadas + oob del botón deshacer
+POST   /tareas/deshacer                   -> revierte el último /mover (un solo nivel); no-op si no hay nada que deshacer
 PUT    /tareas/{id}/estado                -> cicla el estado (por_hacer→en_progreso→hecho→por_hacer); usado por el ícono de la vista checklist
 GET    /configuracion                     -> panel de gestión de categorías (página aparte, enlazada con un ícono discreto)
 POST   /categorias                        -> crea categoría (color asignado por turno de una paleta fija)
@@ -101,7 +111,9 @@ DELETE /categorias/{id}                   -> borra categoría; sus tareas quedan
 - **Vista checklist:** mismos datos que el tablero, en una sola lista ordenada por estado (no agrupada por categoría — mismo criterio de "todo junto, diferenciado por color" que el tablero); el ícono de estado (`PUT /tareas/{id}/estado`) reemplaza el drag-and-drop para cambiar de columna con un clic.
 - **Panel de categorías escondido:** vive en `/configuracion`, fuera del flujo principal — el tablero se mantiene limpio; se llega ahí por un ícono discreto, no por un modal. Lo único editable de una categoría es nombre y color — ya no tiene una posición visual que reordenar.
 - **Búsqueda en vivo:** input con `hx-trigger="keyup changed delay:300ms"` apuntando a `/tareas`, sin JS de filtrado en cliente; funciona igual en tablero y checklist (el parámetro `vista` decide qué fragmento devuelve el mismo endpoint).
-- **Contadores y vencidas:** se actualizan con `hx-swap-oob` en la respuesta de crear/mover/eliminar, para no tener que re-renderizar la columna completa por un número.
+- **Contadores, resumen y vencidas:** se actualizan con `hx-swap-oob` en la respuesta de crear/editar/mover/eliminar/ciclar-estado (`app/plantillas.py:combinar()` concatena la respuesta principal con estas piezas oob), para no tener que re-renderizar la columna ni la cabecera completa por un número.
+- **Deshacer:** `app/estado.py` guarda en memoria el snapshot (tarea, columna origen, posición) del último `/mover`, sobrescrito en cada drag — un solo nivel, no una pila. El botón de la barra lo consume con `POST /tareas/deshacer` y se deshabilita a sí mismo vía oob; si la tarea se borra antes de deshacer, el snapshot se invalida para no dar 404.
+- **Tema:** un script inline en `base.html` aplica el tema guardado en `localStorage` antes del primer pintado (evita parpadeo); el botón de la barra cicla auto→claro→medio→oscuro escribiendo `data-tema` en `<html>`, que es lo único que lee `estilos.css` — el servidor no sabe ni le importa qué tema hay activo.
 
 ## Criterios de aceptación
 
@@ -113,8 +125,10 @@ DELETE /categorias/{id}                   -> borra categoría; sus tareas quedan
 - [ ] Categorías gestionables desde `/configuracion` (crear/renombrar/cambiar color/borrar), sin tocar código.
 - [ ] El tablero mezcla todas las categorías dentro de cada columna, diferenciadas solo por color; editar la categoría de una tarea no la reubica.
 - [ ] La vista checklist refleja el mismo estado que el tablero, en una sola lista, y permite ciclar por hacer→en progreso→hecho con un clic.
-- [ ] Sin JS de aplicación custom más allá del callback de SortableJS: cero framework SPA, cero build step.
-- [ ] Tests con `pytest` + `TestClient` cubren crear, editar, mover, eliminar, categorías y ciclo de estado.
+- [ ] Deshacer revierte el último movimiento de tarjeta (columna y/o posición); un segundo clic sin movimientos nuevos es un no-op seguro.
+- [ ] El tema (claro/medio/oscuro) persiste entre recargas y no parpadea al cargar la página.
+- [ ] Sin JS de aplicación que duplique lógica de servidor (cálculo de orden, estado, filtros): el JS propio se limita al callback de SortableJS y utilidades de UI pura (tema, mostrar/ocultar un formulario) — cero framework SPA, cero build step.
+- [ ] Tests con `pytest` + `TestClient` cubren crear, editar, mover, deshacer, eliminar, categorías y ciclo de estado.
 - [ ] README con GIF mostrando drag-and-drop, edición inline, categorías y checklist.
 
 ## Orden de implementación (con commits sugeridos)
@@ -133,7 +147,8 @@ DELETE /categorias/{id}                   -> borra categoría; sus tareas quedan
 12. `feat(checklist): vista lista con estado ciclico`
 13. `feat(busqueda): extender filtro a categoria en ambas vistas`
 14. `refactor(tablero): categorias por color en vez de swimlanes, tablero y checklist planos`
-15. `chore: Dockerfile, docker-compose y README con GIF`
+15. `style(rediseno): tokens, temas y barra superior compartida` (+ commits siguientes por plantilla, guía en `entrega/`)
+16. `chore: Dockerfile, docker-compose y README con GIF`
 
 ## Notas para Claude
 

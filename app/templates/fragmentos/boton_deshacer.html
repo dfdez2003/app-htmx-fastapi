@@ -1,0 +1,12 @@
+<button type="button" id="boton-deshacer" class="boton-barra{% if not puede_deshacer %} deshabilitado{% endif %}"
+        title="Deshacer el último movimiento"{% if oob %} hx-swap-oob="true"{% endif %}
+        {% if puede_deshacer %}
+        hx-post="/tareas/deshacer" hx-target="#boton-deshacer" hx-swap="outerHTML"
+        {% else %}
+        disabled
+        {% endif %}>
+  <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+    <path d="M6.4 3.6 3 7l3.4 3.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path>
+    <path d="M3 7h6.2a3.8 3.8 0 1 1 0 7.6H7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path>
+  </svg>
+</button>

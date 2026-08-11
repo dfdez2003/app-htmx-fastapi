@@ -1,14 +1,27 @@
 <li class="item-checklist{% if tarea.vencida %} vencida{% endif %}" id="checklist-{{ tarea.id }}"
     {% if tarea.categoria %}style="--categoria-color: {{ tarea.categoria.color }};"{% endif %}>
-  <button type="button" class="estado-icono" title="Cambiar estado: {{ tarea.columna.value }}"
+  <button type="button"
+          class="estado-icono{% if tarea.columna.value == 'en_progreso' %} estado-en-progreso{% elif tarea.columna.value == 'hecho' %} estado-hecho{% endif %}"
+          title="Cambiar estado: {{ tarea.columna.value }}"
           hx-put="/tareas/{{ tarea.id }}/estado" hx-target="#checklist-{{ tarea.id }}" hx-swap="outerHTML">
-    {% if tarea.columna.value == "por_hacer" %}☐{% elif tarea.columna.value == "en_progreso" %}◐{% else %}✓{% endif %}
+    {% if tarea.columna.value == "en_progreso" %}
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M4 0a4 4 0 0 1 0 8V0Z" fill="currentColor"></path></svg>
+    {% elif tarea.columna.value == "hecho" %}
+    <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2 5 8.7l4.5-5.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    {% endif %}
   </button>
-  <span class="prioridad prioridad-{{ tarea.prioridad.value }}" title="Prioridad: {{ tarea.prioridad.value }}"></span>
   <span class="item-titulo{% if tarea.columna.value == 'hecho' %} completado{% endif %}">{{ tarea.titulo }}</span>
+  {% if tarea.categoria %}
+  <span class="categoria-chip"><span class="categoria-punto"></span>{{ tarea.categoria.nombre }}</span>
+  {% endif %}
   {% if tarea.etiqueta %}<span class="etiqueta">{{ tarea.etiqueta }}</span>{% endif %}
-  {% if tarea.fecha_limite %}<span class="fecha">{{ tarea.fecha_limite }}</span>{% endif %}
-  <button type="button" class="boton-icono item-eliminar"
+  {% if tarea.fecha_limite %}<span class="fecha">{{ tarea.fecha_limite|fecha_corta }}</span>{% endif %}
+  <span class="prioridad prioridad-{{ tarea.prioridad.value }}" title="Prioridad: {{ tarea.prioridad.value }}"></span>
+  <button type="button" class="boton-icono peligro item-eliminar"
           hx-delete="/tareas/{{ tarea.id }}" hx-target="#checklist-{{ tarea.id }}" hx-swap="outerHTML"
-          hx-confirm="¿Eliminar esta tarea?" title="Eliminar">🗑</button>
+          hx-confirm="¿Eliminar esta tarea?" title="Eliminar">
+    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+      <path d="M2.8 4h8.4M5.6 4V2.8h2.8V4M4 4l.5 7.2h5L10 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+  </button>
 </li>

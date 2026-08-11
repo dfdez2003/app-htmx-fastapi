@@ -1,6 +1,6 @@
 {% for bloque in bloques %}
 <div class="lista" id="lista-{{ bloque.columna_clave }}" data-columna="{{ bloque.columna_clave }}"
-     {% if not loop.first %} hx-swap-oob="true"{% endif %}>
+     {% if todas_oob or not loop.first %} hx-swap-oob="true"{% endif %}>
   {% for tarea in bloque.tareas %}
     {% include "fragmentos/tarjeta.html" %}
   {% endfor %}

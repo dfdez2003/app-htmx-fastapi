@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from sqlmodel import Session, select
 
+from app import estado
 from app.database import get_session
 from app.modelos import PALETA_CATEGORIAS, Categoria, Tarea
 from app.plantillas import templates
@@ -26,7 +27,9 @@ def _lista_categorias(request: Request, session: Session):
 def configuracion(request: Request, session: Session = Depends(get_session)):
     categorias = session.exec(select(Categoria).order_by(Categoria.orden)).all()
     return templates.TemplateResponse(
-        request, "configuracion.html", {"categorias": categorias}
+        request,
+        "configuracion.html",
+        {"categorias": categorias, "puede_deshacer": estado.ultimo_movimiento is not None},
     )
 
 

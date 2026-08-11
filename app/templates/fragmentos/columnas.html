@@ -1,6 +1,15 @@
 {% for columna in columnas %}
-<section class="columna">
-  <h2 class="columna-titulo">{{ columna.etiqueta }} <span class="contador" id="contador-{{ columna.clave }}">{{ columna.tareas|length }}</span></h2>
+<section class="columna" data-columna="{{ columna.clave }}">
+  <h2 class="columna-titulo">
+    <span class="columna-punto"></span>
+    {{ columna.etiqueta }}
+    <span class="contador" id="contador-{{ columna.clave }}">{{ columna.tareas|length }}</span>
+    <button type="button" class="boton-anadir-columna" data-abre-creador="{{ columna.clave }}" title="Añadir tarea" aria-label="Añadir tarea">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+        <path d="M7 2.6v8.8M2.6 7h8.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+      </svg>
+    </button>
+  </h2>
   <div class="lista" id="lista-{{ columna.clave }}" data-columna="{{ columna.clave }}">
     {% for tarea in columna.tareas %}{% include "fragmentos/tarjeta.html" %}{% endfor %}
   </div>

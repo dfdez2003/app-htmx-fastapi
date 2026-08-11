@@ -11,8 +11,7 @@
     <select name="categoria" title="Categoría">
       <option value="sin" {% if tarea.categoria_id is none %}selected{% endif %}>Sin categoría</option>
       {% for categoria in categorias %}
-      <option value="{{ categoria.id }}" data-color="{{ categoria.color }}" style="background-color: {{ categoria.color }};"
-              {% if tarea.categoria_id == categoria.id %}selected{% endif %}>{{ categoria.nombre }}</option>
+      <option value="{{ categoria.id }}" {% if tarea.categoria_id == categoria.id %}selected{% endif %}>{{ categoria.nombre }}</option>
       {% endfor %}
     </select>
     <select name="prioridad" title="Prioridad">
@@ -31,22 +30,33 @@
   </div>
 </form>
 {% else %}
-<form class="formulario-tarea formulario-crear"
-      hx-post="/tareas"
-      hx-target="#lista-{{ columna_clave }}"
-      hx-swap="beforeend"
-      hx-on::after-request="if(event.detail.successful) this.reset()">
-  <input type="hidden" name="columna" value="{{ columna_clave }}">
-  <input type="text" name="titulo" placeholder="Nueva tarea..." required>
-  <div class="formulario-fila">
-    <input type="text" name="etiqueta" placeholder="Etiqueta (opcional)">
-    <select name="categoria" title="Categoría">
-      <option value="sin">Sin categoría</option>
-      {% for categoria in categorias %}
-      <option value="{{ categoria.id }}" data-color="{{ categoria.color }}" style="background-color: {{ categoria.color }};">{{ categoria.nombre }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <button type="submit">Añadir</button>
-</form>
+<div class="formulario-crear" id="creador-{{ columna_clave }}">
+  <button type="button" class="disparador" data-abre-creador="{{ columna_clave }}">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M7 2.6v8.8M2.6 7h8.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+    </svg>
+    Nueva tarea
+  </button>
+  <form class="formulario-tarea" style="display: none"
+        hx-post="/tareas"
+        hx-target="#lista-{{ columna_clave }}"
+        hx-swap="beforeend"
+        hx-on::after-request="if(event.detail.successful) this.reset(); cerrarCreador(this)">
+    <input type="hidden" name="columna" value="{{ columna_clave }}">
+    <input type="text" name="titulo" placeholder="Título de la tarea" required>
+    <div class="formulario-fila">
+      <input type="text" name="etiqueta" placeholder="Etiqueta (opcional)">
+      <select name="categoria" title="Categoría">
+        <option value="sin">Sin categoría</option>
+        {% for categoria in categorias %}
+        <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="formulario-acciones">
+      <button type="submit">Añadir</button>
+      <button type="button" class="boton-secundario" onclick="cerrarCreador(this.closest('form'))">Cancelar</button>
+    </div>
+  </form>
+</div>
 {% endif %}

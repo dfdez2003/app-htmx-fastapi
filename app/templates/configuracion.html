@@ -1,18 +1,27 @@
 {% extends "base.html" %}
 {% block contenido %}
-<header class="cabecera">
-  <h1>Configuración</h1>
-  <a href="/" class="config-volver">← Volver al tablero</a>
-</header>
-<main class="config-categorias">
-  <h2>Categorías</h2>
-  <p class="config-ayuda">Cada categoría es un color para distinguir el tipo de tarea. Borrar una no borra sus tareas — quedan como "Sin categoría".</p>
-  {% include "fragmentos/lista_categorias.html" %}
-  <form class="formulario-categoria-nueva"
-        hx-post="/categorias" hx-target="#lista-categorias" hx-swap="outerHTML"
-        hx-on::after-request="if(event.detail.successful) this.reset()">
-    <input type="text" name="nombre" placeholder="Nueva categoría..." required>
-    <button type="submit">Añadir</button>
-  </form>
-</main>
+{% with vista_activa = "configuracion", puede_deshacer = puede_deshacer %}{% include "fragmentos/barra.html" %}{% endwith %}
+<div class="contenido">
+  <main class="config-categorias">
+    <a href="/" class="config-volver">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M8.4 3 4.6 7l3.8 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+      Volver al tablero
+    </a>
+    <header class="cabecera">
+      <div>
+        <h1>Categorías</h1>
+        <p class="config-ayuda">Cada categoría es un color para distinguir el tipo de tarea. Borrar una no borra sus tareas — quedan como "Sin categoría".</p>
+      </div>
+    </header>
+    {% include "fragmentos/lista_categorias.html" %}
+    <form class="formulario-categoria-nueva"
+          hx-post="/categorias" hx-target="#lista-categorias" hx-swap="outerHTML"
+          hx-on::after-request="if(event.detail.successful) this.reset()">
+      <input type="text" name="nombre" placeholder="Nueva categoría..." required>
+      <button type="submit">Añadir</button>
+    </form>
+  </main>
+</div>
 {% endblock %}

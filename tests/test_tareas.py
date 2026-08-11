@@ -203,6 +203,82 @@ def test_mover_con_posicion_fuera_de_rango_se_clampa_sin_error(client, engine):
         assert session.get(Tarea, id_a).orden == 0
 
 
+# --- deshacer ------------------------------------------------------------
+
+
+def test_deshacer_revierte_cambio_de_columna(client, engine):
+    id_a = _crear(client, engine, titulo="A", columna="por_hacer")
+    _crear(client, engine, titulo="B", columna="por_hacer")
+
+    client.put(f"/tareas/{id_a}/mover", data={"columna_destino": "hecho", "posicion": 0})
+    with Session(engine) as session:
+        assert session.get(Tarea, id_a).columna == "hecho"
+
+    resp = client.post("/tareas/deshacer")
+    assert resp.status_code == 200
+    assert 'id="boton-deshacer"' in resp.text
+    assert "disabled" in resp.text  # ya no queda nada que deshacer
+
+    with Session(engine) as session:
+        tarea_a = session.get(Tarea, id_a)
+        assert tarea_a.columna == "por_hacer"
+        assert tarea_a.orden == 0  # vuelve exactamente a donde estaba
+
+
+def test_deshacer_restaura_posicion_dentro_de_la_misma_columna(client, engine):
+    id_a = _crear(client, engine, titulo="A", columna="por_hacer")
+    id_b = _crear(client, engine, titulo="B", columna="por_hacer")
+    _crear(client, engine, titulo="C", columna="por_hacer")
+
+    # C empieza en la posicion 2; lo mando al frente.
+    with Session(engine) as session:
+        id_c = session.exec(select(Tarea).where(Tarea.titulo == "C")).one().id
+    client.put(f"/tareas/{id_c}/mover", data={"columna_destino": "por_hacer", "posicion": 0})
+
+    client.post("/tareas/deshacer")
+
+    with Session(engine) as session:
+        ordenados = session.exec(
+            select(Tarea).where(Tarea.columna == "por_hacer").order_by(Tarea.orden)
+        ).all()
+    assert [t.id for t in ordenados] == [id_a, id_b, id_c]
+
+
+def test_deshacer_sin_movimiento_previo_es_no_op(client):
+    resp = client.post("/tareas/deshacer")
+    assert resp.status_code == 200
+    assert "disabled" in resp.text
+
+
+def test_deshacer_solo_revierte_un_nivel(client, engine):
+    id_a = _crear(client, engine, titulo="A", columna="por_hacer")
+    id_b = _crear(client, engine, titulo="B", columna="por_hacer")
+
+    client.put(f"/tareas/{id_a}/mover", data={"columna_destino": "hecho", "posicion": 0})
+    client.put(f"/tareas/{id_b}/mover", data={"columna_destino": "en_progreso", "posicion": 0})
+    client.post("/tareas/deshacer")
+
+    with Session(engine) as session:
+        # Solo se deshace el ultimo movimiento (B); A se queda donde el
+        # segundo drag lo dejo.
+        assert session.get(Tarea, id_a).columna == "hecho"
+        assert session.get(Tarea, id_b).columna == "por_hacer"
+
+    # Un segundo deshacer no tiene a donde volver: no-op.
+    resp = client.post("/tareas/deshacer")
+    assert "disabled" in resp.text
+
+
+def test_eliminar_tarea_recien_movida_invalida_el_deshacer(client, engine):
+    id_a = _crear(client, engine, titulo="A", columna="por_hacer")
+    client.put(f"/tareas/{id_a}/mover", data={"columna_destino": "hecho", "posicion": 0})
+    client.delete(f"/tareas/{id_a}")
+
+    resp = client.post("/tareas/deshacer")
+    assert resp.status_code == 200
+    assert "disabled" in resp.text  # no revienta con 404 por la tarea borrada
+
+
 # --- busqueda ----------------------------------------------------------------
 
 
