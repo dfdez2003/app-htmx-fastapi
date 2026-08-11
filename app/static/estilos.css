@@ -76,7 +76,8 @@ body {
   max-width: 500px;
 }
 
-.buscador input {
+.buscador input,
+.buscador select {
   flex: 1;
   min-width: 0;
   font: inherit;
@@ -127,10 +128,12 @@ body {
 
 .tarjeta {
   /* Sin categoría: --categoria-color no está seteada, cae al fallback
-     (var(--panel)) y el color-mix da panel puro -> sin tinte. */
-  background: color-mix(in srgb, var(--categoria-color, var(--panel)) 18%, var(--panel));
+     (var(--panel)) y el color-mix da panel puro -> sin tinte. Con
+     categoría, la tarjeta se pinta entera y fuerte con su color — no es
+     un detalle sutil, es la forma principal de distinguir el tipo. */
+  background: color-mix(in srgb, var(--categoria-color, var(--panel)) 55%, white);
   border: 1px solid var(--borde);
-  border-left: 3px solid var(--categoria-color, var(--borde));
+  border-left: 4px solid var(--categoria-color, var(--borde));
   border-radius: 6px;
   padding: 0.6rem 0.75rem;
 }
@@ -188,7 +191,7 @@ body {
 
 .tarjeta.vencida {
   border-color: #e0554f;
-  border-left: 3px solid #e0554f;
+  border-left: 4px solid #e0554f;
 }
 
 .tarjeta.vencida .fecha {
@@ -287,6 +290,14 @@ body {
   border-radius: 6px;
   background: var(--fondo);
   color: var(--texto);
+}
+
+/* El color de la opción elegida se refleja también con el desplegable
+   cerrado (--categoria-color-select la setea categoria-select.js al
+   elegir/cargar), no solo al abrirlo. */
+.formulario-tarea select[name="categoria"],
+#buscador-categoria {
+  border-left: 4px solid var(--categoria-color-select, var(--borde));
 }
 
 .formulario-ayuda {
@@ -423,15 +434,15 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: color-mix(in srgb, var(--categoria-color, var(--panel)) 18%, var(--panel));
+  background: color-mix(in srgb, var(--categoria-color, var(--panel)) 55%, white);
   border: 1px solid var(--borde);
-  border-left: 3px solid var(--categoria-color, transparent);
+  border-left: 4px solid var(--categoria-color, transparent);
   border-radius: 6px;
   padding: 0.5rem 0.6rem;
 }
 
 .item-checklist.vencida {
-  border-left: 3px solid #e0554f;
+  border-left: 4px solid #e0554f;
 }
 
 .item-checklist-vacio {

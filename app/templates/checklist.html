@@ -24,7 +24,7 @@
             hx-trigger="change" hx-include="#buscador-texto, #buscador-etiqueta">
       <option value="">Todas las categorías</option>
       {% for categoria in categorias %}
-      <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+      <option value="{{ categoria.id }}" data-color="{{ categoria.color }}" style="background-color: {{ categoria.color }};">{{ categoria.nombre }}</option>
       {% endfor %}
       <option value="sin">Sin categoría</option>
     </select>

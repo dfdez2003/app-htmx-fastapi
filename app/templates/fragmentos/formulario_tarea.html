@@ -11,7 +11,8 @@
     <select name="categoria" title="Categoría">
       <option value="sin" {% if tarea.categoria_id is none %}selected{% endif %}>Sin categoría</option>
       {% for categoria in categorias %}
-      <option value="{{ categoria.id }}" {% if tarea.categoria_id == categoria.id %}selected{% endif %}>{{ categoria.nombre }}</option>
+      <option value="{{ categoria.id }}" data-color="{{ categoria.color }}" style="background-color: {{ categoria.color }};"
+              {% if tarea.categoria_id == categoria.id %}selected{% endif %}>{{ categoria.nombre }}</option>
       {% endfor %}
     </select>
     <select name="prioridad" title="Prioridad">
@@ -42,7 +43,7 @@
     <select name="categoria" title="Categoría">
       <option value="sin">Sin categoría</option>
       {% for categoria in categorias %}
-      <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+      <option value="{{ categoria.id }}" data-color="{{ categoria.color }}" style="background-color: {{ categoria.color }};">{{ categoria.nombre }}</option>
       {% endfor %}
     </select>
   </div>
