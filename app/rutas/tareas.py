@@ -11,8 +11,11 @@ from app.vistas import (
     SIN_CATEGORIA,
     categoria_id_desde_form,
     construir_checklist,
+    construir_columna_categoria,
     construir_columnas,
+    construir_por_categoria,
     construir_resumen,
+    leer_prefs_checklist,
     listar_categorias,
 )
 
@@ -32,6 +35,22 @@ def _resumen_oob(session: Session) -> tuple[str, dict]:
     endpoint que cree/edite/mueva/borre una tarea."""
     todas = session.exec(select(Tarea)).all()
     return ("fragmentos/resumen.html", {"resumen": construir_resumen(todas), "oob": True})
+
+
+def _columna_categoria_pieza(session: Session, request: Request, valor: str, oob: bool = False) -> tuple[str, dict]:
+    """Fragmento de UNA columna de la vista por categoría, re-renderizada
+    desde el estado actual de la BD. La usan crear/mover/estado/borrar en modo
+    "categoria" para que la columna siempre refleje el orden por estado."""
+    _, giro = leer_prefs_checklist(request)
+    todas = session.exec(select(Tarea)).all()
+    categorias = listar_categorias(session)
+    col = construir_columna_categoria(todas, valor, categorias, giro)
+    return ("fragmentos/columna_categoria.html", {"col": col, "oob": oob})
+
+
+def _valor_categoria(tarea: Tarea) -> str:
+    """El id de categoría de una tarea como string, o SIN_CATEGORIA si no tiene."""
+    return SIN_CATEGORIA if tarea.categoria_id is None else str(tarea.categoria_id)
 
 
 ORDEN_ESTADOS = [Columna.por_hacer, Columna.en_progreso, Columna.hecho]
@@ -110,6 +129,16 @@ def buscar_tareas(
     tareas = session.exec(consulta).all()
 
     if vista == "checklist":
+        modo, giro = leer_prefs_checklist(request)
+        if modo == "categoria":
+            return templates.TemplateResponse(
+                request,
+                "fragmentos/grid_categorias.html",
+                {
+                    "columnas_cat": construir_por_categoria(tareas, listar_categorias(session), giro),
+                    "giro": giro,
+                },
+            )
         return templates.TemplateResponse(
             request, "fragmentos/lista_checklist.html", {"tareas": construir_checklist(tareas)}
         )
@@ -126,6 +155,7 @@ def crear_tarea(
     columna: Columna = Form(...),
     categoria: str = Form(SIN_CATEGORIA),
     etiqueta: str = Form(""),
+    origen: str = Form(""),
     session: Session = Depends(get_session),
 ):
     titulo = titulo.strip()
@@ -147,6 +177,16 @@ def crear_tarea(
     session.add(tarea)
     session.commit()
     session.refresh(tarea)
+
+    # Creada desde una columna de la vista por categoría: se re-renderiza esa
+    # columna entera (para que la tarea nueva caiga en su grupo de estado),
+    # en vez de agregar una tarjeta suelta como en el tablero.
+    if origen == "categoria":
+        return combinar(
+            request,
+            _columna_categoria_pieza(session, request, categoria or SIN_CATEGORIA),
+            _resumen_oob(session),
+        )
 
     return combinar(
         request,
@@ -219,9 +259,15 @@ def editar_tarea(
 
 
 @router.delete("/tareas/{tarea_id}")
-def eliminar_tarea(request: Request, tarea_id: int, session: Session = Depends(get_session)):
+def eliminar_tarea(
+    request: Request,
+    tarea_id: int,
+    vista: str = "",
+    session: Session = Depends(get_session),
+):
     tarea = _obtener_o_404(session, tarea_id)
     columna = tarea.columna
+    valor_categoria = _valor_categoria(tarea)
     session.delete(tarea)
     session.commit()
 
@@ -229,6 +275,15 @@ def eliminar_tarea(request: Request, tarea_id: int, session: Session = Depends(g
     # volver: se borró. Evita un 404 al pulsar "deshacer" después.
     if estado.ultimo_movimiento and estado.ultimo_movimiento["tarea_id"] == tarea_id:
         estado.ultimo_movimiento = None
+
+    # En la vista por categoría se re-renderiza la columna (para actualizar su
+    # cuenta); en tablero/lista basta con actualizar el contador de la columna.
+    if vista == "categoria":
+        return combinar(
+            request,
+            _columna_categoria_pieza(session, request, valor_categoria),
+            _resumen_oob(session),
+        )
 
     total = len(session.exec(select(Tarea).where(Tarea.columna == columna)).all())
     return combinar(
@@ -239,7 +294,12 @@ def eliminar_tarea(request: Request, tarea_id: int, session: Session = Depends(g
 
 
 @router.put("/tareas/{tarea_id}/estado")
-def ciclar_estado(request: Request, tarea_id: int, session: Session = Depends(get_session)):
+def ciclar_estado(
+    request: Request,
+    tarea_id: int,
+    vista: str = "",
+    session: Session = Depends(get_session),
+):
     """Avanza por_hacer → en_progreso → hecho → por_hacer. Usado por el
     ícono de estado de la vista checklist en vez de arrastrar."""
     tarea = _obtener_o_404(session, tarea_id)
@@ -265,11 +325,47 @@ def ciclar_estado(request: Request, tarea_id: int, session: Session = Depends(ge
     session.commit()
     session.refresh(tarea)
 
+    # En la vista por categoría, cambiar de estado reordena la tarjeta dentro
+    # de su columna, así que se re-renderiza la columna completa; en la lista
+    # única basta con actualizar el ítem en su sitio (el ícono de estado).
+    if vista == "categoria":
+        return combinar(
+            request,
+            _columna_categoria_pieza(session, request, _valor_categoria(tarea)),
+            _resumen_oob(session),
+        )
+
     return combinar(
         request,
         ("fragmentos/item_checklist.html", {"tarea": tarea}),
         _resumen_oob(session),
     )
+
+
+@router.put("/tareas/{tarea_id}/categoria")
+def recategorizar_tarea(
+    request: Request,
+    tarea_id: int,
+    categoria_valor: str = Form(...),
+    session: Session = Depends(get_session),
+):
+    """Reasigna la categoría de una tarea al soltarla en otra columna de la
+    vista por categoría. No toca su estado ni su orden: la tarea reaparece en
+    su mismo grupo de estado, ahora dentro de la columna destino. Devuelve la
+    columna destino (target) y, si cambió, la de origen (oob)."""
+    tarea = _obtener_o_404(session, tarea_id)
+    origen_valor = _valor_categoria(tarea)
+
+    tarea.categoria_id = categoria_id_desde_form(categoria_valor)
+    session.add(tarea)
+    session.commit()
+
+    destino_valor = _valor_categoria(tarea)
+    piezas = [_columna_categoria_pieza(session, request, destino_valor)]
+    if destino_valor != origen_valor:
+        piezas.append(_columna_categoria_pieza(session, request, origen_valor, oob=True))
+    piezas.append(_resumen_oob(session))
+    return combinar(request, *piezas)
 
 
 @router.put("/tareas/{tarea_id}/mover")

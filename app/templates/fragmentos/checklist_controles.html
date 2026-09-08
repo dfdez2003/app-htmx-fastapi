@@ -1,0 +1,31 @@
+<div class="checklist-modos">
+  <button type="button" class="chip-modo{% if modo != 'categoria' %} activo{% endif %}"
+          hx-get="/checklist/vista?modo=lista&giro={{ 'invertido' if giro else 'normal' }}"
+          hx-target="#checklist-panel" hx-swap="innerHTML">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+      <path d="M2 4.2h2.6M2 8h2.6M2 11.8h2.6M7 4.2h7M7 8h7M7 11.8h7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path>
+    </svg>
+    Una lista
+  </button>
+  <button type="button" class="chip-modo{% if modo == 'categoria' %} activo{% endif %}"
+          hx-get="/checklist/vista?modo=categoria&giro={{ 'invertido' if giro else 'normal' }}"
+          hx-target="#checklist-panel" hx-swap="innerHTML">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+      <rect x="1.6" y="2.4" width="3.4" height="11.2" rx="1.2" stroke="currentColor" stroke-width="1.4"></rect>
+      <rect x="6.3" y="2.4" width="3.4" height="11.2" rx="1.2" stroke="currentColor" stroke-width="1.4"></rect>
+      <rect x="11" y="2.4" width="3.4" height="11.2" rx="1.2" stroke="currentColor" stroke-width="1.4"></rect>
+    </svg>
+    Por categoría
+  </button>
+</div>
+{% if modo == 'categoria' %}
+<button type="button" class="boton-girar"
+        hx-get="/checklist/vista?modo=categoria&giro={{ 'normal' if giro else 'invertido' }}"
+        hx-target="#checklist-panel" hx-swap="innerHTML"
+        title="Girar el orden de los estados">
+  <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+    <path d="M4.5 2.5 2 5l2.5 2.5M2 5h8.5A3.5 3.5 0 0 1 14 8.5M11.5 13.5 14 11l-2.5-2.5M14 11H5.5A3.5 3.5 0 0 1 2 7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path>
+  </svg>
+  {% if giro %}Hecho primero{% else %}Por hacer primero{% endif %}
+</button>
+{% endif %}

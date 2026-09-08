@@ -1,0 +1,6 @@
+<div class="grid-categorias">
+  {% for col in columnas_cat %}{% include "fragmentos/columna_categoria.html" %}{% endfor %}
+  {% if not columnas_cat %}
+  <p class="item-checklist-vacio">No hay categorías todavía. Créalas en <a href="/configuracion">Configuración</a>.</p>
+  {% endif %}
+</div>

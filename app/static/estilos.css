@@ -662,6 +662,94 @@ body.arrastrando .tarjeta:hover {
 .item-checklist .categoria-chip,
 .item-checklist .fecha { flex-shrink: 0; }
 
+/* ---------- Checklist: controles (modo + girar) ---------- */
+.checklist-controles {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+
+/* Segmentado tipo píldora, mismo lenguaje que el cambio de vista de la barra */
+.checklist-modos {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--superficie2);
+  border-radius: var(--pill);
+}
+
+.chip-modo {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  border-radius: var(--pill);
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--suave-fondo);
+  cursor: pointer;
+  transition: background var(--transicion), color var(--transicion);
+}
+
+.chip-modo:hover { color: var(--texto-fondo); }
+
+.chip-modo.activo {
+  background: var(--superficie);
+  color: var(--texto);
+  box-shadow: var(--sombra);
+}
+
+.boton-girar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border: 1px solid var(--linea);
+  background: var(--superficie);
+  box-shadow: var(--sombra);
+  border-radius: var(--pill);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--suave);
+  cursor: pointer;
+  transition: color var(--transicion), background var(--transicion);
+}
+
+.boton-girar:hover { color: var(--texto); }
+
+/* ---------- Checklist: vista por categoría ---------- */
+.grid-categorias {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 28px;
+  align-items: start;
+}
+
+.columna-categoria .columna-punto { background: var(--categoria-color, var(--tenue)); }
+
+.lista-categoria {
+  list-style: none;
+  margin: 0;
+  padding: 6px 4px;
+  min-height: 60px;
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--sombra);
+}
+
+/* Dentro de una columna las tarjetas se arrastran */
+.lista-categoria .item-checklist { cursor: grab; }
+.lista-categoria .item-checklist:active { cursor: grabbing; }
+.lista-categoria .item-checklist.sortable-ghost { opacity: .35; }
+.lista-categoria .item-checklist.sortable-chosen { background: var(--superficie2); }
+
+body.arrastrando .item-checklist:hover { background: none; }
+
 /* ---------- Configuración ---------- */
 .config-categorias { max-width: 620px; padding: 0; }
 

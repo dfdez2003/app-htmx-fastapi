@@ -1,0 +1,42 @@
+{% set en_categoria = true %}
+<section class="columna columna-categoria" id="col-categoria-{{ col.categoria_valor }}"
+         {% if oob %}hx-swap-oob="true"{% endif %}
+         style="--categoria-color: {{ col.color or '#8b8a94' }};">
+  <h2 class="columna-titulo">
+    <span class="columna-punto"></span>
+    {{ col.nombre }}
+    <span class="contador">{{ col.tareas|length }}</span>
+    <button type="button" class="boton-anadir-columna" data-abre-creador="cat-{{ col.categoria_valor }}" title="Añadir tarea" aria-label="Añadir tarea">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+        <path d="M7 2.6v8.8M2.6 7h8.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+      </svg>
+    </button>
+  </h2>
+  <ul class="lista-categoria" id="lista-cat-{{ col.categoria_valor }}" data-categoria="{{ col.categoria_valor }}">
+    {% for tarea in col.tareas %}{% include "fragmentos/item_checklist.html" %}{% endfor %}
+    {% if not col.tareas %}<li class="item-checklist-vacio">Sin tareas.</li>{% endif %}
+  </ul>
+  <div class="formulario-crear" id="creador-cat-{{ col.categoria_valor }}">
+    <button type="button" class="disparador" data-abre-creador="cat-{{ col.categoria_valor }}">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M7 2.6v8.8M2.6 7h8.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+      </svg>
+      Nueva tarea
+    </button>
+    <form class="formulario-tarea" style="display: none"
+          hx-post="/tareas"
+          hx-target="#col-categoria-{{ col.categoria_valor }}"
+          hx-swap="outerHTML"
+          hx-on::after-request="if(event.detail.successful) this.reset(); cerrarCreador(this)">
+      <input type="hidden" name="columna" value="por_hacer">
+      <input type="hidden" name="categoria" value="{{ col.categoria_valor }}">
+      <input type="hidden" name="origen" value="categoria">
+      <input type="text" name="titulo" placeholder="Título de la tarea" required>
+      <input type="text" name="etiqueta" placeholder="Etiqueta (opcional)">
+      <div class="formulario-acciones">
+        <button type="submit">Añadir</button>
+        <button type="button" class="boton-secundario" onclick="cerrarCreador(this.closest('form'))">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</section>

@@ -1,0 +1,10 @@
+<div id="checklist-controles" class="checklist-controles">
+  {% include "fragmentos/checklist_controles.html" %}
+</div>
+<div id="checklist-contenido" class="checklist-contenido">
+  {% if modo == "categoria" %}
+    {% include "fragmentos/grid_categorias.html" %}
+  {% else %}
+    {% include "fragmentos/lista_checklist.html" %}
+  {% endif %}
+</div>

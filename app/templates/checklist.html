@@ -14,18 +14,18 @@
           <path d="m10.6 10.6 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
         </svg>
         <input type="search" name="buscar" id="buscador-texto" placeholder="Buscar por título..."
-               hx-get="/tareas" hx-target="#checklist-lista" hx-swap="innerHTML"
+               hx-get="/tareas" hx-target="#checklist-contenido" hx-swap="innerHTML"
                hx-vals='{"vista": "checklist"}'
                hx-trigger="keyup changed delay:300ms" hx-include="#buscador-etiqueta, #buscador-categoria">
       </div>
       <div class="campo-busqueda">
         <input type="text" name="etiqueta" id="buscador-etiqueta" placeholder="Etiqueta..."
-               hx-get="/tareas" hx-target="#checklist-lista" hx-swap="innerHTML"
+               hx-get="/tareas" hx-target="#checklist-contenido" hx-swap="innerHTML"
                hx-vals='{"vista": "checklist"}'
                hx-trigger="keyup changed delay:300ms" hx-include="#buscador-texto, #buscador-categoria">
       </div>
       <select name="categoria" id="buscador-categoria" class="filtro" title="Filtrar por categoría"
-              hx-get="/tareas" hx-target="#checklist-lista" hx-swap="innerHTML"
+              hx-get="/tareas" hx-target="#checklist-contenido" hx-swap="innerHTML"
               hx-vals='{"vista": "checklist"}'
               hx-trigger="change" hx-include="#buscador-texto, #buscador-etiqueta">
         <option value="">Todas las categorías</option>
@@ -36,8 +36,9 @@
       </select>
     </div>
   </header>
-  <main id="checklist-lista" class="checklist-lista">
-    {% include "fragmentos/lista_checklist.html" %}
+  <main id="checklist-panel">
+    {% include "fragmentos/checklist_panel.html" %}
   </main>
 </div>
+<script src="{{ estatico('checklist.js') }}"></script>
 {% endblock %}
