@@ -837,23 +837,26 @@ body.arrastrando .item-checklist:hover { background: none; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 18px 9px;
+  gap: 14px;
+  padding: 34px 15px;
+  min-height: 210px;
+  justify-content: center;
   border: none;
   background: var(--cola-fondo);
   color: var(--cola-texto);
-  border-radius: 14px 0 0 14px;
+  border-radius: 16px 0 0 16px;
   box-shadow: var(--sombra-alta);
   cursor: pointer;
   transition: right var(--transicion), filter var(--transicion);
 }
 .cola-toggle:hover { filter: brightness(1.25); }
 .cola-toggle.abierta { right: var(--cola-ancho); border-radius: 0; }
+.cola-toggle svg { width: 21px; height: 21px; }
 .cola-toggle-texto {
   writing-mode: vertical-rl;
-  font-size: 12px;
+  font-size: 13.5px;
   font-weight: 700;
-  letter-spacing: .06em;
+  letter-spacing: .08em;
   text-transform: uppercase;
 }
 

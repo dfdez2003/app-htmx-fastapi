@@ -44,6 +44,11 @@ function inicializarListas() {
           },
           put: ["tablero"],
         },
+        // Solo las tarjetas se arrastran. Clave: al editar, el formulario
+        // reemplaza a la tarjeta DENTRO de la lista; sin esto, forceFallback
+        // secuestraba el clic de sus campos (no se podía abrir el <select>
+        // de categoría). El formulario no es .tarjeta, así que queda libre.
+        draggable: ".tarjeta",
         animation: 150,
         forceFallback: true,
         // Sin tolerancia, forceFallback arranca el drag con el primer
