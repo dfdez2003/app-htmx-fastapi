@@ -1,0 +1,16 @@
+<aside class="cola-marca{% if tarea.orden_ejecucion %} con-numero{% endif %}" id="cola-marca-{{ tarea.id }}"{% if oob %} hx-swap-oob="true"{% endif %}>
+  {% if tarea.orden_ejecucion %}
+  <button type="button" class="cola-numero" title="Quitar de la cola de trabajo"
+          hx-delete="/cola/{{ tarea.id }}" hx-swap="none">
+    <span class="cola-numero-valor">{{ tarea.orden_ejecucion }}</span>
+    <span class="cola-numero-x" aria-hidden="true">×</span>
+  </button>
+  {% else %}
+  <button type="button" class="cola-add" title="Agregar a la cola de trabajo"
+          hx-post="/cola/{{ tarea.id }}" hx-swap="none">
+    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+      <path d="M7 2.6v8.8M2.6 7h8.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+    </svg>
+  </button>
+  {% endif %}
+</aside>

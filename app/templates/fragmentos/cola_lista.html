@@ -1,0 +1,6 @@
+<ol id="cola-lista" class="cola-lista"{% if oob %} hx-swap-oob="true"{% endif %}>
+  {% for tarea in cola %}{% include "fragmentos/cola_item.html" %}{% endfor %}
+  {% if not cola %}
+  <li class="cola-vacia">Aún no hay nada en tu orden de trabajo. Arrastra una tarjeta aquí o usa el botón <strong>+</strong> de una tarjeta para numerarla.</li>
+  {% endif %}
+</ol>

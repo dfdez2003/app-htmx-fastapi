@@ -1,0 +1,12 @@
+<li class="cola-item" id="cola-item-{{ tarea.id }}" data-id="{{ tarea.id }}"
+    {% if tarea.categoria %}style="--categoria-color: {{ tarea.categoria.color }};"{% endif %}>
+  <span class="cola-item-num">{{ tarea.orden_ejecucion }}</span>
+  {% if tarea.categoria %}<span class="cola-item-punto"></span>{% endif %}
+  <span class="cola-item-titulo{% if tarea.columna.value == 'hecho' %} completado{% endif %}">{{ tarea.titulo }}</span>
+  <button type="button" class="boton-icono peligro" title="Quitar de la cola"
+          hx-delete="/cola/{{ tarea.id }}" hx-swap="none">
+    <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+      <path d="M3.5 3.5l7 7M10.5 3.5l-7 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path>
+    </svg>
+  </button>
+</li>

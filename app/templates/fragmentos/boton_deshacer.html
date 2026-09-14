@@ -2,6 +2,7 @@
         title="Deshacer el último movimiento"{% if oob %} hx-swap-oob="true"{% endif %}
         {% if puede_deshacer %}
         hx-post="/tareas/deshacer" hx-target="#boton-deshacer" hx-swap="outerHTML"
+        hx-include="#buscador-texto, #buscador-etiqueta, #buscador-categoria"
         {% else %}
         disabled
         {% endif %}>

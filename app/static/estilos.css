@@ -24,9 +24,13 @@
   --suave-fondo: #6b6875;
   --tenue-fondo: #a5a2b0;
 
-  --acento: #6d28d9;
-  --rojo: #d9463b;
-  --verde: #0e9f9f;
+  /* Paleta en escala de grises: el único color de la app viene de las
+     categorías (--categoria-color). El "acento" es casi negro en claro y
+     casi blanco en oscuro; --sobre-acento es el texto que va encima. */
+  --acento: #26252c;
+  --sobre-acento: #ffffff;
+  --rojo: #3f3e46;
+  --verde: #6b6875;
 
   --sombra: 0 1px 2px rgba(20, 18, 30, .05), 0 6px 16px -8px rgba(20, 18, 30, .10);
   --sombra-alta: 0 2px 4px rgba(20, 18, 30, .06), 0 14px 30px -12px rgba(20, 18, 30, .18);
@@ -38,6 +42,10 @@
 
   --gutter: 48px;
   --transicion: .16s ease;
+  --cola-ancho: 340px;
+  /* Panel de la cola: siempre negro con texto blanco (fijo en los 3 temas). */
+  --cola-fondo: #1b1a20;
+  --cola-texto: #f2f2f4;
 }
 
 /* Tema oscuro: automático por preferencia del sistema y forzable con
@@ -58,9 +66,10 @@
     --texto-fondo: #f2f2f4;
     --suave-fondo: #9c9ca3;
     --tenue-fondo: #6c6c74;
-    --acento: #8b5cf6;
-    --rojo: #f4796d;
-    --verde: #2bb3b3;
+    --acento: #f2f2f4;
+    --sobre-acento: #16151a;
+    --rojo: #c9c7d0;
+    --verde: #9c9ca3;
     --sombra: 0 1px 2px rgba(0, 0, 0, .5);
     --sombra-alta: 0 2px 6px rgba(0, 0, 0, .55), 0 14px 30px -14px rgba(0, 0, 0, .8);
   }
@@ -77,9 +86,10 @@
   --texto-fondo: #f2f2f4;
   --suave-fondo: #9c9ca3;
   --tenue-fondo: #6c6c74;
-  --acento: #8b5cf6;
-  --rojo: #f4796d;
-  --verde: #2bb3b3;
+  --acento: #f2f2f4;
+  --sobre-acento: #16151a;
+  --rojo: #c9c7d0;
+  --verde: #9c9ca3;
   --sombra: 0 1px 2px rgba(0, 0, 0, .5);
   --sombra-alta: 0 2px 6px rgba(0, 0, 0, .55), 0 14px 30px -14px rgba(0, 0, 0, .8);
 }
@@ -144,6 +154,7 @@ svg { display: block; }
   height: 26px;
   border-radius: 9px;
   background: var(--acento);
+  color: var(--sobre-acento);
   display: grid;
   place-items: center;
 }
@@ -551,7 +562,7 @@ body.arrastrando .tarjeta:hover {
   flex: 1;
   border: none;
   background: var(--acento);
-  color: #fff;
+  color: var(--sobre-acento);
   font-size: 13px;
   font-weight: 650;
   padding: 9px;
@@ -646,7 +657,7 @@ body.arrastrando .tarjeta:hover {
 
 .estado-icono:hover { border-color: var(--acento); }
 .estado-en-progreso { border-color: var(--acento); color: var(--acento); }
-.estado-hecho { border-color: transparent; background: var(--acento); color: #fff; }
+.estado-hecho { border-color: transparent; background: var(--acento); color: var(--sobre-acento); }
 
 .item-titulo {
   flex: 1;
@@ -750,6 +761,206 @@ body.arrastrando .tarjeta:hover {
 
 body.arrastrando .item-checklist:hover { background: none; }
 
+/* ---------- Cola de trabajo ---------- */
+/* La tarjeta se parte en su contenido (izquierda) y una columna estrecha a
+   la derecha con el número de la cola / el botón + para agregarla. */
+.tarjeta { display: flex; align-items: stretch; }
+.tarjeta-principal { flex: 1; min-width: 0; }
+
+.cola-marca {
+  flex: 0 0 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 1px solid var(--linea);
+  transition: flex-basis var(--transicion);
+}
+
+/* Con número: el doble de ancho, recuadro sólido (acento) y número blanco
+   grande, para que "se note" cuál sigue. */
+.cola-marca.con-numero {
+  flex-basis: 84px;
+  background: var(--acento);
+  border-left: none;
+}
+
+.cola-numero {
+  position: relative;
+  width: 100%;
+  min-height: 46px;
+  border: none;
+  background: transparent;
+  color: var(--sobre-acento);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.cola-numero-valor { font-size: 30px; font-weight: 800; letter-spacing: -.02em; transition: opacity var(--transicion); }
+.cola-numero-x {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--sobre-acento);
+  opacity: 0;
+  transition: opacity var(--transicion);
+}
+.cola-numero:hover .cola-numero-valor { opacity: 0; }
+.cola-numero:hover .cola-numero-x { opacity: 1; }
+
+/* El + es discreto: aparece al pasar el cursor por la tarjeta. */
+.cola-add {
+  width: 100%;
+  min-height: 46px;
+  border: none;
+  background: transparent;
+  color: var(--tenue);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: opacity var(--transicion), color var(--transicion);
+}
+.tarjeta:hover .cola-add { opacity: .5; }
+.cola-add:hover { opacity: 1; color: var(--acento); }
+
+/* Pestaña lateral: botón largo pegado al borde derecho que despliega/guarda
+   el panel. Se desplaza con el panel para quedar siempre a la vista. */
+.cola-toggle {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  z-index: 41;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 9px;
+  border: none;
+  background: var(--cola-fondo);
+  color: var(--cola-texto);
+  border-radius: 14px 0 0 14px;
+  box-shadow: var(--sombra-alta);
+  cursor: pointer;
+  transition: right var(--transicion), filter var(--transicion);
+}
+.cola-toggle:hover { filter: brightness(1.25); }
+.cola-toggle.abierta { right: var(--cola-ancho); border-radius: 0; }
+.cola-toggle-texto {
+  writing-mode: vertical-rl;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+/* Panel lateral deslizable — negro con texto blanco. `top` lo ajusta el JS
+   para que arranque a la altura de las tarjetas; baja hasta el fondo. */
+.cola-panel {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: var(--cola-ancho);
+  max-width: 88vw;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  background: var(--cola-fondo);
+  color: var(--cola-texto);
+  border-left: 1px solid rgba(255, 255, 255, .08);
+  box-shadow: var(--sombra-alta);
+  transform: translateX(102%);
+  transition: transform var(--transicion);
+}
+.cola-panel.abierta { transform: none; }
+
+.cola-panel-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 18px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, .1);
+}
+.cola-panel-cabecera h2 { margin: 0; font-size: 16px; font-weight: 750; letter-spacing: -.01em; }
+
+/* Contenido del panel adaptado al fondo oscuro */
+.cola-panel .boton-icono { color: rgba(255, 255, 255, .55); }
+.cola-panel .boton-icono:hover { background: rgba(255, 255, 255, .1); color: #fff; }
+
+.cola-lista {
+  list-style: none;
+  margin: 0;
+  padding: 12px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+/* El clon que SortableJS deja caer en el panel al arrastrar una tarjeta se
+   oculta: el servidor re-renderiza la lista enseguida con el ítem real. */
+.cola-lista > .tarjeta { display: none; }
+
+.cola-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, .06);
+  border-radius: 12px;
+  cursor: grab;
+  transition: background var(--transicion);
+}
+.cola-item:hover { background: rgba(255, 255, 255, .1); }
+.cola-item:active { cursor: grabbing; }
+.cola-item.sortable-ghost { opacity: .35; }
+body.arrastrando .cola-item { cursor: grabbing; }
+
+.cola-item-num {
+  flex: 0 0 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  background: #f2f2f4;
+  color: #1b1a20;
+  border-radius: 50%;
+  font-size: 12.5px;
+  font-weight: 750;
+}
+.cola-item-punto {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--categoria-color, var(--tenue));
+}
+.cola-item-titulo {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cola-item-titulo.completado { color: rgba(255, 255, 255, .4); text-decoration: line-through; }
+
+.cola-vacia { padding: 16px 6px; color: rgba(255, 255, 255, .5); font-size: 13px; line-height: 1.55; text-wrap: pretty; cursor: pointer; }
+
+/* Al abrir el panel se empuja el contenido a la izquierda para que NADA quede
+   detrás (sobre todo la columna "Hecho"); las columnas se reacomodan más
+   angostas para que las tres sigan cabiendo. En móvil el panel se sobrepone. */
+body { transition: padding-right var(--transicion); }
+body.cola-abierta { padding-right: var(--cola-ancho); }
+body.cola-abierta .tablero-columnas { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+@media (max-width: 560px) { body.cola-abierta { padding-right: 0; } }
+
 /* ---------- Configuración ---------- */
 .config-categorias { max-width: 620px; padding: 0; }
 
@@ -848,7 +1059,7 @@ body.arrastrando .item-checklist:hover { background: none; }
 .formulario-categoria-nueva button {
   border: none;
   background: var(--acento);
-  color: #fff;
+  color: var(--sobre-acento);
   font-size: 13px;
   font-weight: 650;
   padding: 9px 18px;
@@ -867,6 +1078,10 @@ body.arrastrando .item-checklist:hover { background: none; }
   .marca span { display: none; }
   .cabecera h1 { font-size: 27px; }
   .tablero-columnas { gap: 32px; }
+}
+
+@media (max-width: 560px) {
+  :root { --cola-ancho: 84vw; }
 }
 
 @media (prefers-reduced-motion: reduce) {

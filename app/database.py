@@ -14,6 +14,20 @@ engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
 def crear_tablas() -> None:
     SQLModel.metadata.create_all(engine)
+    _migrar_columnas()
+
+
+def _migrar_columnas() -> None:
+    """Mini-migración para BDs ya existentes: create_all no altera tablas que
+    ya existen, así que las columnas nuevas se agregan a mano si faltan.
+    SQLite ADD COLUMN es barato y no toca los datos existentes."""
+    nuevas = {"orden_ejecucion": "INTEGER"}
+    with engine.connect() as conn:
+        existentes = {fila[1] for fila in conn.exec_driver_sql("PRAGMA table_info(tarea)").fetchall()}
+        for columna, tipo in nuevas.items():
+            if columna not in existentes:
+                conn.exec_driver_sql(f"ALTER TABLE tarea ADD COLUMN {columna} {tipo}")
+        conn.commit()
 
 
 def get_session() -> Iterator[Session]:

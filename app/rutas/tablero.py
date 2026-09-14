@@ -5,6 +5,7 @@ from app import estado
 from app.database import get_session
 from app.modelos import Tarea
 from app.plantillas import templates
+from app.rutas.cola import listar_cola
 from app.vistas import (
     construir_checklist,
     construir_columnas,
@@ -31,6 +32,8 @@ def tablero(request: Request, session: Session = Depends(get_session)):
             "categorias": categorias,
             "resumen": resumen,
             "puede_deshacer": estado.ultimo_movimiento is not None,
+            "cola": listar_cola(session),
+            "cola_abierta": request.cookies.get("cola_abierta") == "1",
         },
     )
 

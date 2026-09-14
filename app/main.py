@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.database import crear_tablas, sembrar_categorias, sembrar_datos
 from app.rutas.categorias import router as categorias_router
+from app.rutas.cola import router as cola_router
 from app.rutas.tablero import router as tablero_router
 from app.rutas.tareas import router as tareas_router
 
@@ -27,6 +28,7 @@ app.mount(
 app.include_router(tablero_router)
 app.include_router(tareas_router)
 app.include_router(categorias_router)
+app.include_router(cola_router)
 
 
 @app.get("/salud")

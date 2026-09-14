@@ -7,8 +7,10 @@ from app import estado
 from app.database import get_session
 from app.modelos import Columna, Prioridad, Tarea
 from app.plantillas import combinar, templates
+from app.rutas.cola import listar_cola, piezas_cola, quitar_de_cola, renumerar_cola
 from app.vistas import (
     SIN_CATEGORIA,
+    aplicar_filtros,
     categoria_id_desde_form,
     construir_checklist,
     construir_columna_categoria,
@@ -88,16 +90,28 @@ def _reinsertar(session: Session, tarea: Tarea, columna_destino: Columna, posici
     return cambia_columna
 
 
-def _bloques_tras_mover(session: Session, columna_destino: Columna, columna_origen: Columna, cambia_columna: bool) -> list[dict]:
-    tareas_destino_final = session.exec(
-        select(Tarea).where(Tarea.columna == columna_destino).order_by(Tarea.orden)
-    ).all()
-    bloques = [{"columna_clave": columna_destino.value, "tareas": tareas_destino_final}]
+def _bloques_tras_mover(
+    session: Session,
+    columna_destino: Columna,
+    columna_origen: Columna,
+    cambia_columna: bool,
+    buscar: str = "",
+    etiqueta: str = "",
+    categoria: str = "",
+) -> list[dict]:
+    """Bloques a re-pintar tras mover/deshacer. El `orden` en BD se recompacta
+    sobre TODAS las tareas (en `_reinsertar`), pero lo que se re-renderiza aquí
+    respeta el filtro activo — así reordenar con un filtro puesto no hace
+    reaparecer tarjetas de otras categorías."""
+    def tareas_de(columna: Columna) -> list[Tarea]:
+        consulta = aplicar_filtros(
+            select(Tarea).where(Tarea.columna == columna), buscar, etiqueta, categoria
+        ).order_by(Tarea.orden)
+        return session.exec(consulta).all()
+
+    bloques = [{"columna_clave": columna_destino.value, "tareas": tareas_de(columna_destino)}]
     if cambia_columna:
-        tareas_origen_final = session.exec(
-            select(Tarea).where(Tarea.columna == columna_origen).order_by(Tarea.orden)
-        ).all()
-        bloques.append({"columna_clave": columna_origen.value, "tareas": tareas_origen_final})
+        bloques.append({"columna_clave": columna_origen.value, "tareas": tareas_de(columna_origen)})
     return bloques
 
 
@@ -115,17 +129,7 @@ def buscar_tareas(
 
     `vista` decide el fragmento de salida: "tablero" (3 columnas, default)
     o "checklist" (lista única) — mismas tareas, distinto renderizado."""
-    consulta = select(Tarea).order_by(Tarea.orden)
-    buscar = buscar.strip()
-    etiqueta = etiqueta.strip()
-    categoria = categoria.strip()
-    if buscar:
-        consulta = consulta.where(Tarea.titulo.ilike(f"%{buscar}%"))
-    if etiqueta:
-        consulta = consulta.where(Tarea.etiqueta.ilike(f"%{etiqueta}%"))
-    if categoria:
-        consulta = consulta.where(Tarea.categoria_id == categoria_id_desde_form(categoria))
-
+    consulta = aplicar_filtros(select(Tarea).order_by(Tarea.orden), buscar, etiqueta, categoria)
     tareas = session.exec(consulta).all()
 
     if vista == "checklist":
@@ -268,6 +272,7 @@ def eliminar_tarea(
     tarea = _obtener_o_404(session, tarea_id)
     columna = tarea.columna
     valor_categoria = _valor_categoria(tarea)
+    estaba_en_cola = tarea.orden_ejecucion is not None
     session.delete(tarea)
     session.commit()
 
@@ -276,6 +281,12 @@ def eliminar_tarea(
     if estado.ultimo_movimiento and estado.ultimo_movimiento["tarea_id"] == tarea_id:
         estado.ultimo_movimiento = None
 
+    # Borrar una tarea que estaba en la cola renumera el resto.
+    piezas_extra = []
+    if estaba_en_cola:
+        renumerar_cola(session, [t.id for t in listar_cola(session)])
+        piezas_extra = piezas_cola(session)
+
     # En la vista por categoría se re-renderiza la columna (para actualizar su
     # cuenta); en tablero/lista basta con actualizar el contador de la columna.
     if vista == "categoria":
@@ -283,6 +294,7 @@ def eliminar_tarea(
             request,
             _columna_categoria_pieza(session, request, valor_categoria),
             _resumen_oob(session),
+            *piezas_extra,
         )
 
     total = len(session.exec(select(Tarea).where(Tarea.columna == columna)).all())
@@ -290,6 +302,7 @@ def eliminar_tarea(
         request,
         ("fragmentos/contador.html", {"columna_clave": columna.value, "total": total}),
         _resumen_oob(session),
+        *piezas_extra,
     )
 
 
@@ -325,6 +338,12 @@ def ciclar_estado(
     session.commit()
     session.refresh(tarea)
 
+    # Completar también saca de la cola de trabajo (las piezas oob solo surten
+    # efecto en el tablero; en el checklist se ignoran, pero la BD ya queda
+    # renumerada para cuando vuelvas al tablero).
+    salio_de_cola = nueva_columna == Columna.hecho and quitar_de_cola(session, tarea_id)
+    piezas_extra = piezas_cola(session) if salio_de_cola else []
+
     # En la vista por categoría, cambiar de estado reordena la tarjeta dentro
     # de su columna, así que se re-renderiza la columna completa; en la lista
     # única basta con actualizar el ítem en su sitio (el ícono de estado).
@@ -333,12 +352,14 @@ def ciclar_estado(
             request,
             _columna_categoria_pieza(session, request, _valor_categoria(tarea)),
             _resumen_oob(session),
+            *piezas_extra,
         )
 
     return combinar(
         request,
         ("fragmentos/item_checklist.html", {"tarea": tarea}),
         _resumen_oob(session),
+        *piezas_extra,
     )
 
 
@@ -373,7 +394,10 @@ def mover_tarea(
     request: Request,
     tarea_id: int,
     columna_destino: Columna = Form(...),
-    posicion: int = Form(...),
+    antes_id: str = Form(""),
+    buscar: str = Form(""),
+    etiqueta: str = Form(""),
+    categoria: str = Form(""),
     session: Session = Depends(get_session),
 ):
     tarea = _obtener_o_404(session, tarea_id)
@@ -387,6 +411,20 @@ def mover_tarea(
     ).all()
     posicion_origen = next(i for i, t in enumerate(tareas_origen_antes) if t.id == tarea_id)
 
+    # La posición de destino se calcula por ANCLA (la tarjeta que quedó justo
+    # antes al soltar), no por un índice numérico: con un filtro activo hay
+    # tarjetas ocultas entre medias, así que el índice visible no corresponde
+    # a la lista real. Anclar a un vecino visible reinserta donde se soltó
+    # sin importar cuántas tarjetas ocultas haya.
+    tareas_destino = session.exec(
+        select(Tarea).where(Tarea.columna == columna_destino, Tarea.id != tarea_id).order_by(Tarea.orden)
+    ).all()
+    if antes_id:
+        indice = next((i for i, t in enumerate(tareas_destino) if str(t.id) == antes_id), None)
+        posicion = indice + 1 if indice is not None else len(tareas_destino)
+    else:
+        posicion = 0
+
     cambia_columna = _reinsertar(session, tarea, columna_destino, posicion)
     session.commit()
 
@@ -396,18 +434,32 @@ def mover_tarea(
         "posicion_origen": posicion_origen,
     }
 
-    bloques = _bloques_tras_mover(session, columna_destino, columna_origen, cambia_columna)
+    # Completar (soltar en "Hecho") saca la tarjeta de la cola de trabajo y
+    # renumera el resto, para que la #2 pase a ser la #1 (la nueva actual).
+    salio_de_cola = columna_destino == Columna.hecho and quitar_de_cola(session, tarea_id)
 
+    bloques = _bloques_tras_mover(
+        session, columna_destino, columna_origen, cambia_columna, buscar, etiqueta, categoria
+    )
+
+    piezas_extra = piezas_cola(session) if salio_de_cola else []
     return combinar(
         request,
         ("fragmentos/lista_columna.html", {"bloques": bloques}),
         _resumen_oob(session),
         ("fragmentos/boton_deshacer.html", {"puede_deshacer": True, "oob": True}),
+        *piezas_extra,
     )
 
 
 @router.post("/tareas/deshacer")
-def deshacer_movimiento(request: Request, session: Session = Depends(get_session)):
+def deshacer_movimiento(
+    request: Request,
+    buscar: str = Form(""),
+    etiqueta: str = Form(""),
+    categoria: str = Form(""),
+    session: Session = Depends(get_session),
+):
     """Revierte el último drag-and-drop (un solo nivel, ver `app/estado.py`).
     Sin nada que deshacer, es un no-op que solo confirma el botón deshabilitado."""
     datos = estado.ultimo_movimiento
@@ -422,7 +474,9 @@ def deshacer_movimiento(request: Request, session: Session = Depends(get_session
     cambia_columna = _reinsertar(session, tarea, columna_origen, datos["posicion_origen"])
     session.commit()
 
-    bloques = _bloques_tras_mover(session, columna_origen, columna_actual, cambia_columna)
+    bloques = _bloques_tras_mover(
+        session, columna_origen, columna_actual, cambia_columna, buscar, etiqueta, categoria
+    )
 
     return combinar(
         request,

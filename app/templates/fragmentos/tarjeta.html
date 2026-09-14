@@ -1,5 +1,6 @@
 <article class="tarjeta{% if tarea.vencida %} vencida{% endif %}" id="tarea-{{ tarea.id }}" data-id="{{ tarea.id }}"
     {% if tarea.categoria %}style="--categoria-color: {{ tarea.categoria.color }};"{% endif %}>
+  <div class="tarjeta-principal">
   <div class="tarjeta-cabecera">
     <div class="tarjeta-fila">
       <span class="prioridad prioridad-{{ tarea.prioridad.value }}" title="Prioridad: {{ tarea.prioridad.value }}"></span>
@@ -38,4 +39,6 @@
       </button>
     </div>
   </div>
+  </div>
+  {% include "fragmentos/cola_marca.html" %}
 </article>

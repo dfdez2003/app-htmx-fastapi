@@ -54,6 +54,11 @@ class Tarea(SQLModel, table=True):
     creado_en: datetime = Field(default_factory=datetime.utcnow)
     categoria_id: int | None = Field(default=None, foreign_key="categoria.id")
     prioridad: Prioridad = Prioridad.media
+    # Número manual de la "cola de trabajo": el orden en que se ejecutarán hoy
+    # las tareas (1 = la actual, 2 = la siguiente, …). Contiguo, independiente
+    # de la posición/estado/categoría — viaja con la tarjeta al moverla. None
+    # = no está en la cola (el caso normal). Ver rutas/cola.py.
+    orden_ejecucion: int | None = Field(default=None)
 
     categoria: Categoria | None = Relationship(back_populates="tareas")
 

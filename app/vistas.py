@@ -20,6 +20,22 @@ def categoria_id_desde_form(valor: str) -> int | None:
     return None if valor in ("", SIN_CATEGORIA) else int(valor)
 
 
+def aplicar_filtros(consulta, buscar: str = "", etiqueta: str = "", categoria: str = ""):
+    """Añade a `consulta` los mismos filtros de la búsqueda en vivo (título,
+    etiqueta, categoría). Compartido entre GET /tareas y el re-render tras
+    arrastrar/deshacer, para que mover una tarjeta no rompa el filtro activo."""
+    buscar = buscar.strip()
+    etiqueta = etiqueta.strip()
+    categoria = categoria.strip()
+    if buscar:
+        consulta = consulta.where(Tarea.titulo.ilike(f"%{buscar}%"))
+    if etiqueta:
+        consulta = consulta.where(Tarea.etiqueta.ilike(f"%{etiqueta}%"))
+    if categoria:
+        consulta = consulta.where(Tarea.categoria_id == categoria_id_desde_form(categoria))
+    return consulta
+
+
 def listar_categorias(session: Session) -> list[Categoria]:
     """Categorías ordenadas, para poblar los <select> de categoría (filtro
     de búsqueda, formulario de tarea) y el panel de configuración."""

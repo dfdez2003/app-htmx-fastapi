@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block body_class %}{% if cola_abierta %}cola-abierta{% endif %}{% endblock %}
 {% block contenido %}
 {% with vista_activa = "tablero", puede_deshacer = puede_deshacer %}{% include "fragmentos/barra.html" %}{% endwith %}
 <div class="contenido">
@@ -37,5 +38,6 @@
     {% include "fragmentos/columnas.html" %}
   </main>
 </div>
+{% include "fragmentos/cola_panel.html" %}
 <script src="{{ estatico('tablero.js') }}"></script>
 {% endblock %}
