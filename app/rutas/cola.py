@@ -82,7 +82,7 @@ def agregar_a_cola(request: Request, tarea_id: int, session: Session = Depends(g
 
 @router.delete("/cola/{tarea_id}")
 def sacar_de_cola(request: Request, tarea_id: int, session: Session = Depends(get_session)):
-    """Quita la tarea de la cola (✕ del panel o del número en la tarjeta)."""
+    """Quita la tarea de la cola (botón de cerrar del panel o del número)."""
     quitar_de_cola(session, tarea_id)
     return combinar(request, *piezas_cola(session, extra_ids=[tarea_id]))
 

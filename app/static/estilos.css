@@ -226,7 +226,7 @@ svg { display: block; }
 .contenido {
   flex: 1;
   width: 100%;
-  max-width: 1440px;
+  max-width: 1760px;
   margin: 0 auto;
   padding: 8px var(--gutter) 64px;
 }
@@ -296,8 +296,8 @@ svg { display: block; }
 /* Columnas sin panel: solo espacio y ritmo. */
 .tablero-columnas {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 28px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 34px;
   align-items: start;
 }
 
@@ -830,17 +830,15 @@ body.arrastrando .item-checklist:hover { background: none; }
    el panel. Se desplaza con el panel para quedar siempre a la vista. */
 .cola-toggle {
   position: fixed;
-  top: 50%;
+  top: 120px; /* fallback; el JS ajusta top y height a lo largo de las tarjetas */
   right: 0;
-  transform: translateY(-50%);
   z-index: 41;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  padding: 34px 15px;
-  min-height: 210px;
-  justify-content: center;
+  gap: 12px;
+  padding: 15px 15px 18px;
+  justify-content: flex-start;
   border: none;
   background: var(--cola-fondo);
   color: var(--cola-texto);
@@ -851,7 +849,7 @@ body.arrastrando .item-checklist:hover { background: none; }
 }
 .cola-toggle:hover { filter: brightness(1.25); }
 .cola-toggle.abierta { right: var(--cola-ancho); border-radius: 0; }
-.cola-toggle svg { width: 21px; height: 21px; }
+.cola-toggle svg { width: 20px; height: 20px; }
 .cola-toggle-texto {
   writing-mode: vertical-rl;
   font-size: 13.5px;

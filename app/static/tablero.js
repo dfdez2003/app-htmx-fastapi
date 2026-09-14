@@ -105,7 +105,7 @@ function inicializarCola() {
   if (lista && !Sortable.get(lista)) {
     new Sortable(lista, {
       // Acepta tarjetas del tablero y reordena internamente; no deja sacar
-      // ítems fuera (quitar es con la ✕).
+      // ítems fuera (quitar es con el botón de cerrar de cada fila).
       group: { name: "cola", pull: false, put: ["tablero", "cola"] },
       animation: 150,
       forceFallback: true,
@@ -124,27 +124,36 @@ function inicializarCola() {
 function reengancharSortables() {
   inicializarListas();
   inicializarCola();
+  ajustarCola(); // la altura de las columnas cambió al agregar/quitar/mover
 }
 document.body.addEventListener("htmx:afterSwap", reengancharSortables);
 document.body.addEventListener("htmx:oobAfterSwap", reengancharSortables);
 reengancharSortables();
 
-// El panel arranca a la altura de las tarjetas (no topa arriba) y baja al
-// fondo. Como la cabecera de la página no es fija, se recalcula el `top` en
-// cada scroll: al inicio queda al nivel de las columnas y, al bajar, se clampa
-// justo debajo de la barra superior fija.
-function ajustarTopCola() {
-  var panel = document.getElementById("cola-panel");
-  if (!panel) return;
-  var barra = document.querySelector(".barra");
+// El panel y la pestaña se alinean con las tarjetas: arrancan a la altura de
+// las columnas (no topan arriba) y la pestaña llega "a lo largo" hasta el
+// borde inferior de la columna más alta (mismo grosor). Como la cabecera no
+// es fija, se recalcula en cada scroll: al inicio queda al nivel de las
+// columnas y, al bajar, se clampa justo debajo de la barra superior fija.
+function ajustarCola() {
   var columnas = document.getElementById("tablero-columnas");
+  if (!columnas) return;
+  var panel = document.getElementById("cola-panel");
+  var pestana = document.getElementById("cola-toggle");
+  var barra = document.querySelector(".barra");
   var minTop = barra ? barra.getBoundingClientRect().bottom : 0;
-  var colsTop = columnas ? columnas.getBoundingClientRect().top : minTop;
-  panel.style.top = Math.max(minTop, colsTop) + "px";
+  var rect = columnas.getBoundingClientRect();
+  var top = Math.max(minTop, rect.top);
+  if (panel) panel.style.top = top + "px"; // el panel llega hasta el fondo (bottom:0 en CSS)
+  if (pestana) {
+    pestana.style.top = top + "px";
+    pestana.style.transform = "none";
+    pestana.style.height = Math.max(0, rect.bottom - top) + "px";
+  }
 }
-window.addEventListener("scroll", ajustarTopCola, { passive: true });
-window.addEventListener("resize", ajustarTopCola);
-ajustarTopCola();
+window.addEventListener("scroll", ajustarCola, { passive: true });
+window.addEventListener("resize", ajustarCola);
+ajustarCola();
 
 // Abrir/cerrar el panel de la cola; se recuerda en cookie para que el
 // servidor lo pinte igual al recargar (mismo criterio que el tema). Al abrir,
@@ -157,7 +166,7 @@ function fijarCola(abierta) {
   if (pestana) pestana.classList.toggle("abierta", abierta);
   document.body.classList.toggle("cola-abierta", abierta);
   document.cookie = "cola_abierta=" + (abierta ? "1" : "0") + "; path=/; max-age=" + 60 * 60 * 24 * 365;
-  if (abierta) ajustarTopCola();
+  if (abierta) ajustarCola();
 }
 
 document.body.addEventListener("click", function (evt) {
@@ -186,6 +195,7 @@ function abrirCreador(clave) {
   var form = wrap.querySelector("form");
   form.style.display = "flex";
   form.querySelector('input[name="titulo"]').focus();
+  ajustarCola(); // el formulario cambió el alto de la columna
 }
 
 function cerrarCreador(form) {
@@ -193,6 +203,7 @@ function cerrarCreador(form) {
   if (!wrap) return;
   form.style.display = "none";
   wrap.querySelector(".disparador").style.display = "flex";
+  ajustarCola();
 }
 
 document.body.addEventListener("click", function (evt) {
