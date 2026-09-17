@@ -4,6 +4,9 @@ WORKDIR /code
 
 COPY pyproject.toml ./
 COPY app ./app
+# Datos versionados (fuente de verdad). Se hornean como respaldo; en uso normal
+# se monta ./datos para que los cambios queden en el repo del host.
+COPY datos ./datos
 
 RUN pip install --no-cache-dir .
 
