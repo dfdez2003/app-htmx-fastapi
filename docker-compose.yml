@@ -2,7 +2,7 @@ services:
   app:
     build: .
     ports:
-      - "8000:8000"
+      - "8100:8000"
     volumes:
       # La fuente de verdad es datos/tablero.json (versionado). Se monta para
       # que los cambios que hace la app queden en el repo del host.

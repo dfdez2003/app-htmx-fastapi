@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+case "${1:-run}" in
+    run)
+        cd "$REPO_DIR"
+        docker compose up -d
+        echo "App disponible en http://localhost:8100"
+        ;;
+    stop)
+        cd "$REPO_DIR"
+        docker compose down
+        ;;
+    status)
+        cd "$REPO_DIR"
+        docker compose ps
+        ;;
+    log|logs)
+        cd "$REPO_DIR"
+        docker compose logs -f
+        ;;
+    build)
+        cd "$REPO_DIR"
+        docker compose up -d --build
+        echo "App disponible en http://localhost:8100"
+        ;;
+    install)
+        mkdir -p "$HOME/.local/bin"
+        ln -sfn "$REPO_DIR/agenda" "$HOME/.local/bin/agenda"
+        echo "Comando instalado: agenda"
+        ;;
+    -h|--help|help)
+        cat <<'EOF'
+Uso: ./agenda [comando]
+
+Comandos:
+  run      Levanta la app en segundo plano (por defecto)
+  stop     Detiene la app
+  status   Muestra el estado de la app
+  log      Muestra los logs de la app
+  build    Reconstruye la imagen y levanta la app
+  install  Instala el comando global `agenda`
+EOF
+        ;;
+    *)
+        echo "Comando desconocido: $1" >&2
+        echo "Usa: ./agenda {run|stop|status|log|build|install}" >&2
+        exit 2
+        ;;
+esac
