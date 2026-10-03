@@ -14,3 +14,8 @@ htmlcov/
 .env
 .DS_Store
 data/
+
+# La fuente de verdad es MongoDB Atlas; esto es caché local y respaldos
+# de conflicto. Se versionaba cuando el JSON era la fuente de verdad, y por
+# eso cada tarea movida generaba un commit.
+datos/*.json

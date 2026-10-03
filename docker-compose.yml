@@ -3,7 +3,14 @@ services:
     build: .
     ports:
       - "8100:8000"
+    environment:
+      # Docker Compose lee el archivo .env del proyecto (no versionado) para
+      # rellenar estas variables. Sin .env quedan vacías y la app trabaja solo
+      # con la caché local, como antes de tener Atlas.
+      - MONGODB_URI=${MONGODB_URI:-}
+      - MONGODB_DB=${MONGODB_DB:-agenda}
+      - MONGODB_COLECCION=${MONGODB_COLECCION:-tablero}
     volumes:
-      # La fuente de verdad es datos/tablero.json (versionado). Se monta para
-      # que los cambios que hace la app queden en el repo del host.
+      # La caché local y los respaldos de conflicto quedan en el repo del host
+      # para poder mirarlos; ya no se versionan (ver .gitignore).
       - ./datos:/code/datos
