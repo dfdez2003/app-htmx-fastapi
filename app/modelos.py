@@ -2,6 +2,7 @@ from datetime import date, datetime
 from enum import Enum
 
 from pydantic import NaiveDatetime
+from sqlalchemy import DateTime
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -52,7 +53,10 @@ class Tarea(SQLModel, table=True):
     orden: int = 0
     etiqueta: str | None = None
     fecha_limite: date | None = None
-    creado_en: NaiveDatetime = Field(default_factory=datetime.utcnow)
+    # NaiveDatetime hace que pydantic rechace fechas con zona horaria, pero no
+    # es un tipo que SQLModel sepa mapear solo; sin sa_type explícito, crear la
+    # tabla falla con "has no matching SQLAlchemy type".
+    creado_en: NaiveDatetime = Field(default_factory=datetime.utcnow, sa_type=DateTime)
     categoria_id: int | None = Field(default=None, foreign_key="categoria.id")
     prioridad: Prioridad = Prioridad.media
     # Número manual de la "cola de trabajo": el orden en que se ejecutarán hoy
